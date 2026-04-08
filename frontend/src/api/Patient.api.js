@@ -14,6 +14,7 @@ export const getAppointments = () => api.get("/patient/appointments")
 export const bookAppointment = (data) => api.post("/patient/appointments", data)
 export const cancelAppointment = (id) => api.delete(`/patient/appointments/${id}`)
 export const getAvailableDoctors = () => api.get("/doctor/public")
+export const getAvailableHospitals = () => api.get("/hospital/public")
 
 // --- FAMILY MEMBERS ---
 export const getFamilyMembers = () => api.get("/patient/family")

@@ -5,12 +5,6 @@ export const loginApi = async (email, password) => {
 }
 
 export const registerApi = async (data) => {
-  // Extract only the fields the backend RegisterRequest expects to avoid 422 Unprocessable errors
-  const requestBody = {
-    email: data.email,
-    password: data.password,
-    phone: data.phone || undefined,
-    role: data.role
-  }
-  return await api.post("/auth/register", requestBody)
+  // Pass the data through; Register.jsx now handles the surgical payload construction.
+  return await api.post("/auth/register", data)
 }

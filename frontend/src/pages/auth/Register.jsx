@@ -37,22 +37,29 @@ const Register = () => {
       const requestData = {
         email: form.email,
         password: form.password,
-        phone: form.phone || undefined,
+        phone: form.phone?.trim() || null,
         role: role,
         full_name: form.full_name,
-        // Role specific extras
-        license_number: extra.license_number || undefined,
-        specialization: extra.specialization || undefined,
-        hospital_name: extra.hospital_name || undefined,
-        registration_number: extra.registration_number || undefined
       }
 
+      // Add role-specific extras only if relevant
+      if (role === "doctor") {
+        requestData.license_number = extra.license_number
+        requestData.specialization = extra.specialization
+      } else if (role === "hospital") {
+        requestData.hospital_name = extra.hospital_name
+        requestData.registration_number = extra.registration_number
+      }
+
+      console.log("Registering with payload:", requestData)
       await registerApi(requestData)
       setSuccess(true)
       setTimeout(() => navigate("/login"), 2500)
     } catch (err) {
+      console.error("Registration error:", err)
       if (err.response && err.response.data && err.response.data.detail) {
-        setError(err.response.data.detail)
+        const detail = err.response.data.detail
+        setError(Array.isArray(detail) ? detail.map(d => `${d.loc.join(".")}: ${d.msg}`).join(", ") : detail)
       } else {
         setError("Network error. Could not connect to the server.")
       }
