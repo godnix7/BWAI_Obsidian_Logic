@@ -16,8 +16,7 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False
 )
 
-# Base class for models
-Base = declarative_base()
+from app.db.base_class import Base
 
 # Dependency for FastAPI routes
 async def get_db():

@@ -8,3 +8,7 @@ passlib[bcrypt]>=1.7.4
 pyjwt>=2.8.0
 redis>=5.0.1
 python-multipart>=0.0.6
+qrcode[pil]
+pillow
+cryptography
+httpx

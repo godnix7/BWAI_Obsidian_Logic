@@ -1,19 +1,24 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import List, Optional
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "MEDI LOCKER API"
     VERSION: str = "1.0.0"
+    API_V1_STR: str = "/api/v1"
     
     # Database
-    DATABASE_URL: str
-    REDIS_URL: str
+    # Providing defaults to prevent validation errors if .env is missing
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/medilocker"
+    REDIS_URL: str = "redis://localhost:6379/0"
 
-    # Auth
+    # Auth (New structure from sujal branch)
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_PRIVATE_KEY_PATH: str = "./keys/private.pem"
     JWT_PUBLIC_KEY_PATH: str = "./keys/public.pem"
+
+    # Patient / QR settings (Restored)
+    QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
 
     # CORS
     ALLOWED_ORIGINS: str = "*"
