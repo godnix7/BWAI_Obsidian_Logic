@@ -1,4 +1,4 @@
-from app.core.database import Base
+from app.db.base_class import Base
 from .user import User, UserRole
 from .profile import HospitalProfile, DoctorProfile, PatientProfile, FamilyMember
 from .clinical import Appointment, AppointmentStatus, AppointmentType, DoctorSchedule, Consent, ConsentStatus, ConsentAccessLevel

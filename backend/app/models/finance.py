@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Date, Integer, Numeric, Boolean, Text, ForeignKey, Enum, text, DateTime
 from sqlalchemy.dialects.postgresql import UUID, JSONB, INET
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship as sa_relationship
 import enum
 from app.db.base_class import Base
 
@@ -17,6 +18,9 @@ class InsuranceRecord(Base):
     coverage_amount = Column(Numeric(12, 2), nullable=False)
     document_url = Column(Text, nullable=True)
     is_active = Column(Boolean, default=True)
+
+    # Relationships
+    patient = sa_relationship("PatientProfile", lazy="selectin")
 
 class BillingStatus(str, enum.Enum):
     UNPAID = "unpaid"
@@ -41,6 +45,10 @@ class BillingRecord(Base):
     payment_method = Column(String(50), nullable=True)  # cash | card | insurance | upi
     paid_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    patient = sa_relationship("PatientProfile", lazy="selectin")
+    hospital = sa_relationship("HospitalProfile", lazy="selectin")
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"

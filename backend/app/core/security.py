@@ -4,7 +4,7 @@ import jwt
 from passlib.context import CryptContext
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List, Optional
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select

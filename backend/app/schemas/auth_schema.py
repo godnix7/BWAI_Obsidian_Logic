@@ -9,6 +9,12 @@ class RegisterRequest(BaseModel):
     password: str
     phone: Optional[str] = None
     role: UserRole
+    full_name: str
+    # Optional Profile Extras
+    license_number: Optional[str] = None
+    specialization: Optional[str] = None
+    hospital_name: Optional[str] = None
+    registration_number: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: EmailStr

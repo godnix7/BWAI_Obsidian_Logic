@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 from uuid import UUID, uuid4
-import shutil
 import os
 
 from app.api.deps import get_db, get_current_patient
@@ -11,6 +10,7 @@ from app.models.user import User
 from app.models.profile import PatientProfile
 from app.models.finance import InsuranceRecord
 from app.schemas.insurance import InsuranceRead, InsuranceCreate, InsuranceUpdate
+from app.services.storage_service import storage_service
 
 router = APIRouter(prefix="/patient/insurance", tags=["Insurance"])
 
@@ -126,21 +126,24 @@ async def upload_insurance_document(
     if not ins:
         raise HTTPException(status_code=404, detail="Insurance record not found.")
 
-    # 1. Unique filename
     file_id = str(uuid4())
     _, ext = os.path.splitext(file.filename)
     unique_filename = f"ins_{file_id}{ext}"
-    
-    # 2. Save physical file
-    storage_path = os.path.join("static", "records", unique_filename)
+
+    storage_key = f"static/records/{unique_filename}"
     try:
-        with open(storage_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        content = await file.read()
     except Exception as e:
-         raise HTTPException(status_code=500, detail=f"Could not save document: {str(e)}")
-    
-    # 3. Update DB
-    ins.document_url = f"/static/records/{unique_filename}"
+        raise HTTPException(status_code=500, detail=f"Could not read document: {str(e)}")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded document is empty.")
+
+    ins.document_url = storage_service.upload_bytes(
+        storage_key,
+        content,
+        file.content_type or "application/octet-stream",
+    )
     
     await db.commit()
     await db.refresh(ins)
