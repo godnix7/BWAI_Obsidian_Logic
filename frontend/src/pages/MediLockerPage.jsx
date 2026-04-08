@@ -4,10 +4,10 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "@studio-freight/lenis";
 import * as THREE from "three";
-const { 
-  Vector3, CatmullRomCurve3, TubeGeometry, PerspectiveCamera, OrthographicCamera, Scene, WebGLRenderer, 
-  Group, MeshStandardMaterial, Mesh, SphereGeometry, CylinderGeometry, AmbientLight, 
-  PointLight, ACESFilmicToneMapping 
+const {
+  Vector3, CatmullRomCurve3, TubeGeometry, PerspectiveCamera, OrthographicCamera, Scene, WebGLRenderer,
+  Group, MeshStandardMaterial, Mesh, SphereGeometry, CylinderGeometry, AmbientLight,
+  PointLight, ACESFilmicToneMapping
 } = THREE;
 
 gsap.registerPlugin(ScrollTrigger);
@@ -92,14 +92,14 @@ export default function MediLockerPage() {
     const lineCanvas = document.createElement('canvas');
     const lineRenderer = new WebGLRenderer({ canvas: lineCanvas, alpha: true, antialias: true });
     lineRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    
+
     const lineScene = new Scene();
     const lineGroup = new Group();
-    
+
     // The main vertical beam - CYBER NEON MAGENTA
     const beamGeo = new CylinderGeometry(0.06, 0.06, 60, 8);
-    const beamMat = new MeshStandardMaterial({ 
-      color: 0xFF00FF, emissive: 0xFF00FF, emissiveIntensity: 3, transparent: true, opacity: 0.8 
+    const beamMat = new MeshStandardMaterial({
+      color: 0xFF00FF, emissive: 0xFF00FF, emissiveIntensity: 3, transparent: true, opacity: 0.8
     });
     const mainBeam = new Mesh(beamGeo, beamMat);
     lineGroup.add(mainBeam);
@@ -107,10 +107,10 @@ export default function MediLockerPage() {
     // Floating data particles around the line
     const pCount = 40;
     const pGeo = new SphereGeometry(0.08, 8, 8);
-    for(let i=0; i<pCount; i++) {
-        const p = new Mesh(pGeo, beamMat);
-        p.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*60, (Math.random()-0.5)*2);
-        lineGroup.add(p);
+    for (let i = 0; i < pCount; i++) {
+      const p = new Mesh(pGeo, beamMat);
+      p.position.set((Math.random() - 0.5) * 2, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 2);
+      lineGroup.add(p);
     }
 
     lineScene.add(lineGroup);
@@ -120,17 +120,17 @@ export default function MediLockerPage() {
     lineScene.add(lLight);
 
     let lineCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
-    let updateLineSize = () => {};
+    let updateLineSize = () => { };
 
     if (lineRef.current) {
       lineRef.current.appendChild(lineRenderer.domElement);
-      
+
       const rect = lineRef.current.getBoundingClientRect();
-      const frustumSize = 25; 
+      const frustumSize = 25;
       const aspect = rect.width / rect.height;
       lineCamera = new OrthographicCamera(
-        frustumSize * aspect / -2, frustumSize * aspect / 2, 
-        frustumSize / 2, frustumSize / -2, 
+        frustumSize * aspect / -2, frustumSize * aspect / 2,
+        frustumSize / 2, frustumSize / -2,
         0.1, 1000
       );
       lineCamera.position.z = 20;
@@ -158,7 +158,7 @@ export default function MediLockerPage() {
           scrub: 1.5
         }
       });
-      
+
       gsap.to(lineGroup.position, {
         y: -10,
         scrollTrigger: {
@@ -192,8 +192,8 @@ export default function MediLockerPage() {
     const animateLine = () => {
       hAnimId = requestAnimationFrame(animateLine);
       lineGroup.children.forEach((child, i) => {
-          if(i > 0) child.position.y += 0.05; // Particles float up
-          if(child.position.y > 30) child.position.y = -30;
+        if (i > 0) child.position.y += 0.05; // Particles float up
+        if (child.position.y > 30) child.position.y = -30;
       });
       lineRenderer.render(lineScene, lineCamera);
     };
@@ -230,6 +230,25 @@ export default function MediLockerPage() {
         scrollTrigger: {
           trigger: ".services-card",
           start: "top 90%",
+          toggleActions: "play none none reverse",
+        },
+      }
+    );
+
+    /* ── HOW IT WORKS REVEAL ───────────────────────── */
+    gsap.fromTo(
+      ".step-card",
+      { y: 180, opacity: 0, scale: 0.85 },
+      {
+        y: 0,
+        opacity: 1,
+        scale: 1,
+        duration: 0.9,
+        stagger: 0.15,
+        ease: "back.out(1.5)",
+        scrollTrigger: {
+          trigger: "#how-it-works",
+          start: "top 75%",
           toggleActions: "play none none reverse",
         },
       }
@@ -279,7 +298,7 @@ export default function MediLockerPage() {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("resize", updateLineSize);
-      
+
       renderer?.dispose();
       lineRenderer?.dispose();
       beamMat?.dispose();
@@ -474,7 +493,7 @@ export default function MediLockerPage() {
                   backgroundClip: "text",
                 }}
               >
-                Your Health.<br/>Your Vault.
+                Your Health.<br />Your Vault.
               </h2>
             </div>
 
@@ -971,9 +990,9 @@ export default function MediLockerPage() {
             }}
           >
             <div>
-              <h2 style={{ 
-                fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700, 
-                color: "var(--eggplant)", marginBottom: 20 
+              <h2 style={{
+                fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700,
+                color: "var(--eggplant)", marginBottom: 20
               }}>
                 MediLocker
               </h2>
@@ -982,21 +1001,27 @@ export default function MediLockerPage() {
               </p>
             </div>
             {[
-              { title: "Platform", items: [
-                { label: "Home", path: "/" },
-                { label: "Learn More", path: "/learn-more" },
-                { label: "Global Presence", path: "#" }
-              ]},
-              { title: "Legal", items: [
-                { label: "Privacy Policy", path: "#" },
-                { label: "Data Security", path: "#" },
-                { label: "Terms of Service", path: "#" }
-              ]},
-              { title: "Contact", items: [
-                { label: "Support", path: "#" },
-                { label: "Partnership", path: "#" },
-                { label: "Emergency", path: "#" }
-              ]}
+              {
+                title: "Platform", items: [
+                  { label: "Home", path: "/" },
+                  { label: "Learn More", path: "/learn-more" },
+                  { label: "Global Presence", path: "/global-presence" }
+                ]
+              },
+              {
+                title: "Legal", items: [
+                  { label: "Privacy Policy", path: "/privacy-policy" },
+                  { label: "Data Security", path: "/data-security" },
+                  { label: "Terms of Service", path: "/terms" }
+                ]
+              },
+              {
+                title: "Contact", items: [
+                  { label: "Support", path: "/support" },
+                  { label: "Partnership", path: "/partnership" },
+                  { label: "Emergency", path: "/emergency" }
+                ]
+              }
             ].map((col) => (
               <div key={col.title}>
                 <h3

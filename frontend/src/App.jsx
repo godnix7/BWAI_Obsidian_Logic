@@ -25,6 +25,10 @@ import DoctorSchedule from "@/pages/doctor/Schedule"
 import DoctorProfile from "@/pages/doctor/Profile"
 import MediLockerPage from "@/pages/MediLockerPage"
 import LearnMore from "@/pages/LearnMore"
+import PrivacyPolicy from "@/pages/public/PrivacyPolicy"
+import TermsOfService from "@/pages/public/TermsOfService"
+import Support from "@/pages/public/Support"
+import Emergency from "@/pages/public/Emergency"
 
 // Hospital
 import HospitalDashboard from "@/pages/hospital/Dashboard"
@@ -49,6 +53,10 @@ export default function App() {
       {/* Public */}
       <Route path="/" element={<MediLockerPage />} />
       <Route path="/learn-more" element={<LearnMore />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/support" element={<Support />} />
+      <Route path="/emergency" element={<Emergency />} />
       <Route path="/login" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to={`/${user.role}`} /> : <Register />} />
 
