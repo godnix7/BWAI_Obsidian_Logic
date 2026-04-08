@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -42,8 +42,8 @@
   --shadow-modal: 0 30px 60px rgba(10, 17, 40, 0.08);
   --shadow-button: 0 4px 16px rgba(74, 139, 223, 0.25);
 
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body: 'Montserrat', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
   --sidebar-width: 260px;
@@ -62,10 +62,11 @@
   overflow-wrap: break-word;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; font-optical-sizing: auto; }
 
 body {
   font-family: var(--font-body);
+  line-height: 1.6;
   background: var(--bg-base);
   background-image: 
     radial-gradient(at 0% 0%, rgba(74, 139, 223, 0.08) 0px, transparent 50%),

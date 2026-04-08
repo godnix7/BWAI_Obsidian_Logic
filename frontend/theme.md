@@ -10,10 +10,10 @@
 
 **MEDI LOCKER** — A secure, role-based digital healthcare platform.
 
-- **Wordmark:** `MEDI LOCKER` — Space Grotesk, Bold, tracked wide
-- **Favicon/Short:** `ML` monogram with gradient fill
+- **Wordmark:** `MEDI LOCKER` — Cormorant Garamond, Light/Semi-Bold, tracked wide
+- **Favicon/Short:** `ML` monogram with elegant serif curves
 - **Tagline:** "Your Health. Your Vault. Your Control."
-- **Voice:** Trustworthy, modern, premium, secure
+- **Voice:** Elegant, Bespoke, Premium, Human-Centric
 
 ---
 
@@ -114,26 +114,28 @@ Each dashboard uses a subtle accent tint to differentiate roles:
 ## 3. Typography
 
 ```css
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Montserrat:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --font-display: 'Space Grotesk', system-ui, sans-serif;
-  --font-body:    'Inter', system-ui, sans-serif;
+  --font-display: 'Cormorant Garamond', serif;
+  --font-body:    'Montserrat', sans-serif;
   --font-mono:    'JetBrains Mono', monospace;
 }
 ```
 
-| Token     | Size | Weight | Font          | Use                           |
-|-----------|------|--------|---------------|-------------------------------|
-| text-xs   | 11px | 600    | Inter         | Badges, status tags           |
-| text-sm   | 13px | 400    | Inter         | Captions, helper text         |
-| text-base | 15px | 400    | Inter         | Body text                     |
-| text-lg   | 20px | 600    | Space Grotesk | Card titles                   |
-| text-xl   | 24px | 700    | Space Grotesk | Page headings (h2)            |
-| text-2xl  | 32px | 700    | Space Grotesk | Section headings (h1)         |
-| text-3xl  | 48px | 800    | Space Grotesk | Hero titles                   |
-| text-4xl  | 64px | 800    | Space Grotesk | Landing hero                  |
-| mono      | 13px | 400    | JetBrains     | IDs, invoice numbers, dates   |
+### The "Eye-Catching" Pair: Cormorant & Montserrat
+
+| Token     | Size | Weight | Font               | Use                           |
+|-----------|------|--------|--------------------|-------------------------------|
+| text-xs   | 11px | 700    | Montserrat         | Badges, uppercase labels      |
+| text-sm   | 13px | 500    | Montserrat         | Helper text, small UI         |
+| text-base | 16px | 400    | Montserrat         | Standard body text            |
+| text-lg   | 22px | 500    | Cormorant Garamond | Sub-headers, card titles      |
+| text-xl   | 28px | 600    | Cormorant Garamond | Page headings (h2)            |
+| text-2xl  | 42px | 600    | Cormorant Garamond | Section headings (h1)         |
+| text-3xl  | 56px | 700    | Cormorant Garamond | Dramatic hero titles          |
+| text-4xl  | 80px | 700    | Cormorant Garamond | Landing billboard caps        |
+| mono      | 13px | 400    | JetBrains Mono     | IDs, dates, mono data         |
 
 ### Gradient text for hero headings:
 ```css
