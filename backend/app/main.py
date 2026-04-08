@@ -5,17 +5,15 @@ from app.core.config import settings
 from app.routers import (
     auth, patient, medical_records, appointments, 
     prescriptions, insurance, consents, emergency,
-    doctor, hospital
+    doctor, hospital, ai
 )
 
-# nischay | project structure & base routers
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    description="Role-Based Healthcare Management Platform Backend - Integrated Patient & Auth Services",
+    description="MediLocker - Role-Based Healthcare Management Dashboard",
     version=settings.VERSION,
 )
 
-# antigravity | cors configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -24,7 +22,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files for QR codes
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
@@ -35,8 +32,6 @@ async def root():
 async def health_check():
     return {"status": "healthy", "version": settings.VERSION}
 
-# antigravity | unified router registration
-# We prefix all routes with /api/v1 for consistency 
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(patient.router, prefix=settings.API_V1_STR)
 app.include_router(medical_records.router, prefix=settings.API_V1_STR)
@@ -47,7 +42,8 @@ app.include_router(consents.router, prefix=settings.API_V1_STR)
 app.include_router(emergency.router, prefix=settings.API_V1_STR)
 app.include_router(doctor.router, prefix=settings.API_V1_STR)
 app.include_router(hospital.router, prefix=settings.API_V1_STR)
+app.include_router(ai.router, prefix=settings.API_V1_STR)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8002, reload=True)

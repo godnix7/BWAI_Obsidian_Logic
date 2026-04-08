@@ -108,3 +108,18 @@ class ConsentRecipientRead(ConsentRead):
     patient: Optional[PatientProfileRead] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+# --- Blocked Dates Schemas ---
+
+class BlockedDateCreate(BaseModel):
+    blocked_date: date
+    reason: Optional[str] = None
+
+class BlockedDateRead(BaseModel):
+    id: UUID
+    doctor_id: UUID
+    blocked_date: date
+    reason: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)

@@ -5,7 +5,9 @@ from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 import os
-
+import hmac
+import hashlib
+import time
 import boto3
 from botocore.client import Config
 
@@ -74,6 +76,45 @@ class StorageService:
             file_handle.write(content)
         return self._local_url(key)
 
+    def generate_signed_url(self, key: str, expires_in: int = 3600) -> str:
+        """
+        Generates a secure, temporary URL for a file.
+        - Uses native S3 presigned URLs if S3 is active.
+        - Uses HMAC-signed custom URLs for local storage.
+        """
+        if self._is_s3():
+            client = self._client_instance()
+            return client.generate_presigned_url(
+                "get_object",
+                Params={"Bucket": self.bucket, "Key": key},
+                ExpiresIn=expires_in,
+            )
+
+        # Local HMAC Signing Logic
+        expiry = int(time.time()) + expires_in
+        message = f"{key}:{expiry}".encode()
+        signature = hmac.new(
+            settings.SECRET_KEY.encode(),
+            message,
+            hashlib.sha256
+        ).hexdigest()
+
+        return f"{settings.BASE_URL}/api/v1/files/download?key={key}&expires={expiry}&signature={signature}"
+
+    def verify_local_signature(self, key: str, expires: int, signature: str) -> bool:
+        """Verifies if the HMAC signature is valid and not expired."""
+        if int(time.time()) > expires:
+            return False
+            
+        message = f"{key}:{expires}".encode()
+        expected = hmac.new(
+            settings.SECRET_KEY.encode(),
+            message,
+            hashlib.sha256
+        ).hexdigest()
+        
+        return hmac.compare_digest(expected, signature)
+
     def upload_fileobj(self, key: str, file_obj, content_type: str) -> str:
         content = file_obj.read()
         return self.upload_bytes(key, content, content_type)
@@ -111,3 +152,4 @@ class StorageService:
 
 
 storage_service = StorageService()
+

@@ -9,13 +9,15 @@ from datetime import time
 from app.api.deps import get_db, get_current_doctor
 from app.models.user import User, UserRole
 from app.models.profile import DoctorProfile, PatientProfile
-from app.models.clinical import Appointment, DoctorSchedule, Consent, ConsentStatus
-from app.models.medical import MedicalRecord, Prescription, PrescriptionMedication, RecordType
-from app.schemas.clinical import AppointmentRead, AppointmentStatusUpdate
+from app.models.clinical import Appointment, DoctorSchedule, Consent, ConsentStatus, BlockedDate
+from app.schemas.clinical import (
+    AppointmentRead, AppointmentStatusUpdate, 
+    BlockedDateRead, BlockedDateCreate
+)
 from app.schemas.doctor_schema import DoctorProfileUpdate, DoctorScheduleCreate, DoctorScheduleRead
 from app.schemas.medical import PrescriptionRead, PrescriptionCreate
 
-router = APIRouter(prefix="/doctor", tags=["Doctor"])
+router = APIRouter(tags=["doctor"])
 
 @router.get("/public", response_model=List[dict])
 async def list_available_doctors(
@@ -161,6 +163,34 @@ async def update_appointment_status(
 
     await db.commit()
     await db.refresh(appt)
+
+    # Trigger Notification to Patient
+    from app.services.notification_service import notification_service
+    # appointments.patient_id -> patient_profiles.id. We need User.id.
+    patient_res = await db.execute(
+        select(PatientProfile.user_id).where(PatientProfile.id == appt.patient_id)
+    )
+    patient_user_id = patient_res.scalars().first()
+
+    if patient_user_id:
+        doc_profile_res = await db.execute(
+            select(DoctorProfile.full_name).where(DoctorProfile.user_id == current_user.id)
+        )
+        doc_name = doc_profile_res.scalars().first() or "Dr. Unknown"
+
+        status_msg = f"Your appointment with {doc_name} is now {appt.status}."
+        if appt.status == "rejected" and appt.rejection_reason:
+            status_msg += f" Reason: {appt.rejection_reason}"
+
+        await notification_service.create_notification(
+            db=db,
+            user_id=patient_user_id,
+            title=f"Appointment {appt.status.capitalize()}",
+            message=status_msg,
+            type="appointment",
+            send_push=True
+        )
+
     return appt
 
 # --- PRESCRIPTIONS ---
@@ -201,6 +231,29 @@ async def create_prescription(
     
     await db.commit()
     await db.refresh(new_prescription)
+
+    # Trigger Notification to Patient
+    from app.services.notification_service import notification_service
+    patient_res = await db.execute(
+        select(PatientProfile.user_id).where(PatientProfile.id == new_prescription.patient_id)
+    )
+    patient_user_id = patient_res.scalars().first()
+
+    if patient_user_id:
+        doc_profile_res = await db.execute(
+            select(DoctorProfile.full_name).where(DoctorProfile.id == new_prescription.doctor_id)
+        )
+        doc_name = doc_profile_res.scalars().first() or "your doctor"
+
+        await notification_service.create_notification(
+            db=db,
+            user_id=patient_user_id,
+            title="New Prescription Issued",
+            message=f"{doc_name} has issued a new prescription for you.",
+            type="prescription",
+            send_push=True
+        )
+
     return new_prescription
 
 @router.get("/prescriptions", response_model=List[PrescriptionRead])
@@ -346,3 +399,71 @@ async def update_schedule(
     await db.commit()
     result = await db.execute(select(DoctorSchedule).where(DoctorSchedule.doctor_id == doctor_id))
     return result.scalars().all()
+
+# --- BLOCKED DATES (LEAVES) ---
+
+@router.get("/blocked-dates", response_model=List[BlockedDateRead])
+async def list_my_blocked_dates(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_doctor)
+):
+    """
+    List all blocked dates (leaves/holidays) for the current doctor.
+    """
+    res = await db.execute(select(DoctorProfile.id).where(DoctorProfile.user_id == current_user.id))
+    doctor_id = res.scalars().first()
+    
+    result = await db.execute(select(BlockedDate).where(BlockedDate.doctor_id == doctor_id).order_by(BlockedDate.blocked_date.desc()))
+    return result.scalars().all()
+
+@router.post("/blocked-dates", response_model=BlockedDateRead)
+async def add_blocked_date(
+    data: BlockedDateCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_doctor)
+):
+    """
+    Add a new holiday/leave date.
+    """
+    res = await db.execute(select(DoctorProfile.id).where(DoctorProfile.user_id == current_user.id))
+    doctor_id = res.scalars().first()
+    
+    # Check if already exists
+    existing = await db.execute(
+        select(BlockedDate).where(BlockedDate.doctor_id == doctor_id, BlockedDate.blocked_date == data.blocked_date)
+    )
+    if existing.scalars().first():
+        raise HTTPException(status_code=400, detail="This date is already blocked.")
+        
+    new_blocked = BlockedDate(
+        doctor_id=doctor_id,
+        **data.model_dump()
+    )
+    db.add(new_blocked)
+    await db.commit()
+    await db.refresh(new_blocked)
+    return new_blocked
+
+@router.delete("/blocked-dates/{blocked_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_blocked_date(
+    blocked_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_doctor)
+):
+    """
+    Remove a blocked date.
+    """
+    res = await db.execute(select(DoctorProfile.id).where(DoctorProfile.user_id == current_user.id))
+    doctor_id = res.scalars().first()
+
+    result = await db.execute(
+        select(BlockedDate).where(BlockedDate.id == blocked_id, BlockedDate.doctor_id == doctor_id)
+    )
+    blocked = result.scalars().first()
+    
+    if not blocked:
+        raise HTTPException(status_code=404, detail="Blocked date not found.")
+        
+    await db.delete(blocked)
+    await db.commit()
+    return None

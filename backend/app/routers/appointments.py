@@ -3,14 +3,28 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
 from uuid import UUID
+from datetime import date
 
 from app.api.deps import get_db, get_current_patient
 from app.models.user import User
 from app.models.profile import PatientProfile
 from app.models.clinical import Appointment, AppointmentStatus
 from app.schemas.clinical import AppointmentRead, AppointmentCreate
+from app.services.appointment_service import appointment_service
 
 router = APIRouter(prefix="/patient/appointments", tags=["Appointments"])
+
+@router.get("/slots")
+async def get_doctor_slots(
+    doctor_id: UUID,
+    appt_date: date,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    Get available appointment slots for a doctor on a specific date.
+    """
+    return await appointment_service.get_available_slots(db, doctor_id, appt_date)
 
 @router.get("", response_model=List[AppointmentRead])
 async def list_appointments(
@@ -41,7 +55,7 @@ async def book_appointment(
     current_user: User = Depends(get_current_patient)
 ):
     """
-    Book a new appointment.
+    Book a new appointment with slot validation.
     """
     res = await db.execute(
         select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
@@ -51,7 +65,17 @@ async def book_appointment(
     if not patient_id:
         raise HTTPException(status_code=400, detail="Patient profile not found.")
 
-    # Simplified booking logic: No slot validation for now
+    # 1. Validate Slot Availability
+    is_available = await appointment_service.is_slot_available(
+        db, appt_data.doctor_id, appt_data.appointment_date, appt_data.appointment_time
+    )
+    if not is_available:
+        raise HTTPException(
+            status_code=400, 
+            detail="The selected time slot is no longer available or invalid."
+        )
+
+    # 2. Create Appointment
     new_appt = Appointment(
         patient_id=patient_id,
         status=AppointmentStatus.PENDING,
@@ -99,10 +123,10 @@ async def cancel_appointment(
     if not appt:
         raise HTTPException(status_code=404, detail="Appointment not found.")
     
-    # Check if already cancelled/completed
     if appt.status in [AppointmentStatus.CANCELLED, AppointmentStatus.COMPLETED]:
          raise HTTPException(status_code=400, detail=f"Cannot cancel appointment with status {appt.status}")
 
     appt.status = AppointmentStatus.CANCELLED
     await db.commit()
     return None
+

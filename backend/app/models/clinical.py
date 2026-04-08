@@ -75,3 +75,15 @@ class Consent(Base):
 
     # Relationship
     patient = sa_relationship("PatientProfile", lazy="selectin")
+
+class BlockedDate(Base):
+    __tablename__ = "doctor_blocked_dates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    doctor_id = Column(UUID(as_uuid=True), ForeignKey("doctor_profiles.id"), nullable=False)
+    blocked_date = Column(Date, nullable=False)
+    reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationship
+    doctor = sa_relationship("DoctorProfile", back_populates="blocked_dates")

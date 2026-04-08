@@ -40,6 +40,7 @@ class MedicalRecordRead(MedicalRecordBase):
     file_mime_type: str
     is_encrypted: bool
     created_at: datetime
+    signed_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -53,7 +54,6 @@ class PrescriptionMedicationCreate(BaseModel):
     instructions: Optional[str] = None
 
 class PrescriptionMedicationRead(BaseModel):
-
     medication_name: str
     dosage: Optional[str] = None
     frequency: Optional[str] = None
@@ -71,7 +71,6 @@ class PrescriptionCreate(BaseModel):
     medications: List[PrescriptionMedicationCreate]
 
 class PrescriptionRead(BaseModel):
-
     id: UUID
     patient_id: UUID
     doctor_id: UUID
@@ -82,5 +81,7 @@ class PrescriptionRead(BaseModel):
     valid_until: Optional[date] = None
     created_at: datetime
     medications: List[PrescriptionMedicationRead] = []
+    signed_url: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
+

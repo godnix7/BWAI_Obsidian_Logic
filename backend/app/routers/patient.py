@@ -11,6 +11,8 @@ from app.schemas.patient import (
     PatientProfileRead, PatientProfileUpdate, 
     ProfileUpdateResponse, FamilyMemberRead, FamilyMemberCreate
 )
+from app.models.finance import BillingRecord
+from app.schemas.finance import BillingRead
 
 router = APIRouter(prefix="/patient", tags=["Patient"])
 
@@ -67,14 +69,12 @@ async def update_patient_profile(
     profile = result.scalars().first()
     
     if not profile:
-        # Initial creation if not exists
         profile = PatientProfile(
             user_id=current_user.id,
             **profile_data.model_dump(exclude_unset=True, exclude={"phone"})
         )
         db.add(profile)
     else:
-        # Update existing
         for field, value in profile_data.model_dump(exclude_unset=True, exclude={"phone"}).items():
             setattr(profile, field, value)
 
@@ -98,7 +98,6 @@ async def list_family_members(
     """
     List all family members associated with the current patient.
     """
-    # First get the patient profile ID
     res = await db.execute(
         select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
     )
@@ -148,56 +147,6 @@ async def update_family_member(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_patient)
 ):
-    res = await db.execute(
-        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
-    )
-    patient_id = res.scalars().first()
-
-    result = await db.execute(
-        select(FamilyMember).where(FamilyMember.id == member_id, FamilyMember.patient_id == patient_id)
-    )
-    member = result.scalars().first()
-
-    if not member:
-        raise HTTPException(status_code=404, detail="Family member not found.")
-
-    for field, value in member_data.model_dump().items():
-        setattr(member, field, value)
-
-    await db.commit()
-    await db.refresh(member)
-    return member
-
-@router.delete("/family/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_family_member(
-    member_id: UUID,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_patient)
-):
-    res = await db.execute(
-        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
-    )
-    patient_id = res.scalars().first()
-
-    result = await db.execute(
-        select(FamilyMember).where(FamilyMember.id == member_id, FamilyMember.patient_id == patient_id)
-    )
-    member = result.scalars().first()
-
-    if not member:
-        raise HTTPException(status_code=404, detail="Family member not found.")
-
-    await db.delete(member)
-    await db.commit()
-    return None
-
-@router.put("/family/{member_id}", response_model=FamilyMemberRead)
-async def update_family_member(
-    member_id: UUID,
-    member_data: FamilyMemberCreate,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_patient)
-):
     """
     Update a family member's details.
     """
@@ -205,21 +154,18 @@ async def update_family_member(
         select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
     )
     patient_id = res.scalars().first()
-    
+
     result = await db.execute(
-        select(FamilyMember).where(
-            FamilyMember.id == member_id, 
-            FamilyMember.patient_id == patient_id
-        )
+        select(FamilyMember).where(FamilyMember.id == member_id, FamilyMember.patient_id == patient_id)
     )
     member = result.scalars().first()
-    
+
     if not member:
         raise HTTPException(status_code=404, detail="Family member not found.")
-        
+
     for field, value in member_data.model_dump().items():
         setattr(member, field, value)
-        
+
     await db.commit()
     await db.refresh(member)
     return member
@@ -237,18 +183,39 @@ async def delete_family_member(
         select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
     )
     patient_id = res.scalars().first()
-    
+
     result = await db.execute(
-        select(FamilyMember).where(
-            FamilyMember.id == member_id, 
-            FamilyMember.patient_id == patient_id
-        )
+        select(FamilyMember).where(FamilyMember.id == member_id, FamilyMember.patient_id == patient_id)
     )
     member = result.scalars().first()
-    
+
     if not member:
         raise HTTPException(status_code=404, detail="Family member not found.")
-        
+
     await db.delete(member)
     await db.commit()
     return None
+
+# --- BILLING ---
+
+@router.get("/bills", response_model=List[BillingRead])
+async def list_patient_bills(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    List all billing records (invoices) for the current patient.
+    """
+    res = await db.execute(
+        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
+    )
+    patient_id = res.scalars().first()
+    
+    if not patient_id:
+        return []
+    
+    result = await db.execute(
+        select(BillingRecord).where(BillingRecord.patient_id == patient_id)
+        .order_by(BillingRecord.created_at.desc())
+    )
+    return result.scalars().all()

@@ -8,9 +8,9 @@ class HospitalProfile(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
-    hospital_name = Column(String(255), nullable=True) # Changed from nullable=False
-    registration_number = Column(String(100), unique=True, nullable=True) # Changed from nullable=False
-    address = Column(Text, nullable=True) # Changed from nullable=False
+    hospital_name = Column(String(255), nullable=True) 
+    registration_number = Column(String(100), unique=True, nullable=True) 
+    address = Column(Text, nullable=True) 
     city = Column(String(100), nullable=True)
     state = Column(String(100), nullable=True)
     phone = Column(String(20), nullable=True)
@@ -28,9 +28,9 @@ class DoctorProfile(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=False)
     hospital_id = Column(UUID(as_uuid=True), ForeignKey("hospital_profiles.id"), nullable=True)
-    full_name = Column(String(255), nullable=True) # Changed from nullable=False
-    specialization = Column(String(100), nullable=True) # Changed from nullable=False
-    license_number = Column(String(100), unique=True, nullable=True) # Changed from nullable=False
+    full_name = Column(String(255), nullable=True) 
+    specialization = Column(String(100), nullable=True) 
+    license_number = Column(String(100), unique=True, nullable=True) 
     years_experience = Column(Integer, nullable=True, default=0)
     consultation_fee = Column(Numeric(10, 2), nullable=True, default=0.0)
     is_available = Column(Boolean, default=True)
@@ -39,14 +39,15 @@ class DoctorProfile(Base):
 
     user = sa_relationship("User", back_populates="doctor_profile")
     hospital = sa_relationship("HospitalProfile", back_populates="doctors")
+    blocked_dates = sa_relationship("BlockedDate", back_populates="doctor", cascade="all, delete-orphan")
 
 class PatientProfile(Base):
     __tablename__ = "patient_profiles"
 
     id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
-    full_name = Column(String(255), nullable=True) # Changed from nullable=False
-    date_of_birth = Column(Date, nullable=True) # Changed from nullable=False
+    full_name = Column(String(255), nullable=True) 
+    date_of_birth = Column(Date, nullable=True) 
     gender = Column(String(10), nullable=True)
     blood_group = Column(String(5), nullable=True)
     address = Column(Text, nullable=True)

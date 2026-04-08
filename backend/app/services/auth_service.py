@@ -3,14 +3,14 @@ import traceback
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
-
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
 from app.core.config import settings
 from app.core.redis import redis_client
+from app.services.audit_service import audit_service
 
 # nischay | user registration base with improved error handling
-async def register_user(db: AsyncSession, data) -> User:
+async def register_user(db: AsyncSession, data, ip_address: str = None, user_agent: str = None) -> User:
     from sqlalchemy.exc import IntegrityError
     from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
     from app.models.user import UserRole
@@ -71,8 +71,25 @@ async def register_user(db: AsyncSession, data) -> User:
             )
             db.add(h_profile)
             
+        # 4. Generate email verification token (antigravity | Hackathon simulation)
+        email_token = uuid.uuid4().hex
+        if redis_client:
+            try:
+                await redis_client.setex(f"email_verify:{email_token}", 24 * 3600, data.email)
+            except Exception:
+                pass
+
+        # 5. Log action
+        await audit_service.log_action(
+            db, new_user.id, "USER_REGISTERED",
+            ip_address=ip_address, user_agent=user_agent,
+            metadata={"email": data.email, "role": data.role}
+        )
+
         await db.commit()
         await db.refresh(new_user)
+        
+        setattr(new_user, "verification_token", email_token) 
         return new_user
 
     except IntegrityError as e:
@@ -85,14 +102,12 @@ async def register_user(db: AsyncSession, data) -> User:
         raise HTTPException(status_code=400, detail=detail)
     except Exception as e:
         await db.rollback()
-        print("CATASTROPHIC REGISTRATION ERROR:")
-        traceback.print_exc()
         if isinstance(e, HTTPException):
             raise e
         raise HTTPException(status_code=500, detail=str(e))
 
 # antigravity | unified login logic with tokens
-async def login_user(db: AsyncSession, email: str, password: str):
+async def login_user(db: AsyncSession, email: str, password: str, ip_address: str = None, user_agent: str = None):
     from app.models.user import UserRole
 
     # 1. Find user by email
@@ -101,6 +116,13 @@ async def login_user(db: AsyncSession, email: str, password: str):
     
     # 2. Verify password and active status
     if not user or not verify_password(password, user.password_hash):
+        if user:
+            await audit_service.log_action(
+                db, user.id, "LOGIN_FAILED",
+                ip_address=ip_address, user_agent=user_agent,
+                metadata={"email": email}
+            )
+            await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
             detail="Invalid email or password"
@@ -133,10 +155,6 @@ async def login_user(db: AsyncSession, email: str, password: str):
         else:
             user.hospital_profile = HospitalProfile(user_id=user.id, hospital_name="Unknown Hospital", registration_number=f"AUTO-{uuid.uuid4().hex[:6]}", address="Unknown", city="Unknown", state="Unknown", phone="Unknown", email=user.email, type="Clinic")
     
-    if not profile_found:
-        await db.commit()
-        await db.refresh(user)
-
     # 4. Generate tokens
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
@@ -148,11 +166,21 @@ async def login_user(db: AsyncSession, email: str, password: str):
         except Exception:
             pass
 
+    # 5. Log action
+    await audit_service.log_action(
+        db, user.id, "USER_LOGGED_IN",
+        ip_address=ip_address, user_agent=user_agent
+    )
+    
+    await db.commit()
+    await db.refresh(user)
+
     return {
         "access_token": access_token, 
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "user": user
+        "user": user,
+        "force_password_change": user.force_password_change
     }
 
 # antigravity | token refresh mechanism
@@ -185,15 +213,24 @@ async def refresh_access_token(db: AsyncSession, refresh_token: str):
         "access_token": new_access_token, 
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "user": user
+        "user": user,
+        "force_password_change": user.force_password_change
     }
 
-async def logout_user(user_id: str):
+async def logout_user(db: AsyncSession, user_id: str, ip_address: str = None, user_agent: str = None):
     if redis_client:
         try:
             await redis_client.delete(f"refresh_token:{user_id}")
         except Exception:
             pass
+    
+    # Log action
+    from uuid import UUID
+    await audit_service.log_action(
+        db, UUID(user_id), "USER_LOGGED_OUT",
+        ip_address=ip_address, user_agent=user_agent
+    )
+    await db.commit()
     return True
 
 async def request_password_reset(email: str):
@@ -205,7 +242,7 @@ async def request_password_reset(email: str):
             pass
     return True
 
-async def reset_password(db: AsyncSession, token: str, new_password: str):
+async def reset_password(db: AsyncSession, token: str, new_password: str, ip_address: str = None, user_agent: str = None):
     if not redis_client:
          raise HTTPException(status_code=500, detail="Redis connection required for password reset")
          
@@ -219,6 +256,59 @@ async def reset_password(db: AsyncSession, token: str, new_password: str):
         raise HTTPException(status_code=404, detail="User not found")
         
     user.password_hash = hash_password(new_password)
+    user.force_password_change = False # Clear flag after reset
+    
+    # Log action
+    await audit_service.log_action(
+        db, user.id, "PASSWORD_RESET",
+        ip_address=ip_address, user_agent=user_agent
+    )
+    
     await db.commit()
     await redis_client.delete(f"pwd_reset:{token}")
     return True
+
+async def verify_email(db: AsyncSession, token: str, ip_address: str = None, user_agent: str = None):
+    if not redis_client:
+         raise HTTPException(status_code=500, detail="Redis connection required for email verification")
+         
+    email = await redis_client.get(f"email_verify:{token}")
+    if not email:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+        
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    user.is_verified = True
+    
+    # Log action
+    await audit_service.log_action(
+        db, user.id, "EMAIL_VERIFIED",
+        ip_address=ip_address, user_agent=user_agent
+    )
+    
+    await db.commit()
+    await redis_client.delete(f"email_verify:{token}")
+    return True
+
+async def change_user_password(db: AsyncSession, user_id: uuid.UUID, old_password: str, new_password: str, ip_address: str = None, user_agent: str = None):
+    """Service to change password, handles force_password_change flag"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    
+    if not user or not verify_password(old_password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid current password")
+        
+    user.password_hash = hash_password(new_password)
+    user.force_password_change = False
+    
+    await audit_service.log_action(
+        db, user.id, "PASSWORD_CHANGED",
+        ip_address=ip_address, user_agent=user_agent
+    )
+    
+    await db.commit()
+    return True
+

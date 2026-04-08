@@ -8,11 +8,16 @@ from datetime import date
 import os
 
 from app.api.deps import get_db, get_current_hospital
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.models.profile import HospitalProfile, PatientProfile, DoctorProfile
 from app.models.medical import MedicalRecord, RecordType
 from app.models.clinical import Consent, ConsentStatus
 from app.models.finance import BillingRecord, HospitalDoctor, BillingStatus
+import secrets
+import string
+from app.core.security import hash_password
+from app.services.email_service import email_service
+from app.services.audit_service import audit_service
 from app.schemas.medical import MedicalRecordRead
 from app.services.storage_service import storage_service
 
@@ -160,6 +165,30 @@ async def upload_lab_report(
     db.add(new_report)
     await db.commit()
     await db.refresh(new_report)
+
+    # 5. Trigger Notification to Patient
+    from app.services.notification_service import notification_service
+    # medical_records.patient_id -> patient_profiles.id. We need User.id.
+    patient_res = await db.execute(
+        select(PatientProfile.user_id).where(PatientProfile.id == patient_id)
+    )
+    patient_user_id = patient_res.scalars().first()
+
+    if patient_user_id:
+        hosp_profile_res = await db.execute(
+            select(HospitalProfile.hospital_name).where(HospitalProfile.user_id == current_user.id)
+        )
+        hosp_name = hosp_profile_res.scalars().first() or "a hospital"
+
+        await notification_service.create_notification(
+            db=db,
+            user_id=patient_user_id,
+            title="New Lab Report Available",
+            message=f"A new lab report '{title}' has been added by {hosp_name}.",
+            type="lab_report",
+            send_push=True
+        )
+
     return new_report
 
 @router.get("/lab-reports", response_model=List[MedicalRecordRead])
@@ -249,36 +278,85 @@ async def list_hospital_doctors(
         })
     return doctors
 
-@router.post("/doctors")
-async def add_doctor_to_hospital(
-    data: dict, # {doctor_id, department}
+@router.post("/doctors", status_code=status.HTTP_201_CREATED)
+async def register_hospital_doctor(
+    data: dict, # {full_name, email, specialization, license_number, years_experience, consultation_fee, department}
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_hospital)
 ):
-    hosp_res = await db.execute(select(HospitalProfile.id).where(HospitalProfile.user_id == current_user.id))
-    hospital_id = hosp_res.scalars().first()
+    """
+    Hospital admin registers a new doctor.
+    - Creates User with auto-generated password.
+    - Emails credentials to doctor.
+    - Links doctor to hospital.
+    """
+    # 1. Check if user already exists
+    existing_user_result = await db.execute(select(User).where(User.email == data["email"].lower()))
+    if existing_user_result.scalars().first():
+        raise HTTPException(status_code=400, detail="User with this email already exists.")
 
-    doctor_result = await db.execute(select(DoctorProfile).where(DoctorProfile.id == data["doctor_id"]))
-    if not doctor_result.scalars().first():
-        raise HTTPException(status_code=404, detail="Doctor profile not found.")
+    # 2. Get current hospital profile
+    hosp_res = await db.execute(select(HospitalProfile).where(HospitalProfile.user_id == current_user.id))
+    hospital_profile = hosp_res.scalars().first()
 
-    existing = await db.execute(
-        select(HospitalDoctor).where(
-            HospitalDoctor.hospital_id == hospital_id,
-            HospitalDoctor.doctor_id == data["doctor_id"],
-        )
+    # 3. Generate Random Password
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    temp_password = ''.join(secrets.choice(alphabet) for _ in range(12))
+
+    # 4. Create User
+    new_user = User(
+        email=data["email"].lower(),
+        password_hash=hash_password(temp_password),
+        role=UserRole.DOCTOR,
+        is_verified=True,
+        force_password_change=True,
+        is_hospital_created=True
     )
-    if existing.scalars().first():
-        raise HTTPException(status_code=400, detail="Doctor is already associated with this hospital.")
-    
+    db.add(new_user)
+    await db.flush()
+
+    # 5. Create Doctor Profile
+    new_doc = DoctorProfile(
+        user_id=new_user.id,
+        hospital_id=hospital_profile.id,
+        full_name=data["full_name"],
+        specialization=data["specialization"],
+        license_number=data["license_number"],
+        years_experience=data.get("years_experience", 0),
+        consultation_fee=data.get("consultation_fee", 0.0),
+        is_available=True
+    )
+    db.add(new_doc)
+    await db.flush()
+
+    # 6. Link in HospitalDoctor mapping
     new_assoc = HospitalDoctor(
-        hospital_id=hospital_id,
-        doctor_id=data['doctor_id'],
+        hospital_id=hospital_profile.id,
+        doctor_id=new_doc.id,
         department=data.get('department', 'General')
     )
     db.add(new_assoc)
+
+    # 7. Audit Logging
+    await audit_service.log_event(
+        db=db,
+        user_id=current_user.id,
+        action="DOCTOR_REGISTERED_BY_HOSPITAL",
+        resource_type="DOCTOR",
+        resource_id=str(new_doc.id),
+        details={"doctor_email": data["email"]}
+    )
+
+    # 8. Send Email
+    await email_service.send_doctor_credentials_email(
+        doctor_full_name=data["full_name"],
+        doctor_email=data["email"].lower(),
+        temp_password=temp_password,
+        hospital_name=hospital_profile.hospital_name
+    )
+
     await db.commit()
-    return {"success": True}
+    return {"message": "Doctor registered successfully. Welcome email sent."}
 
 @router.delete("/doctors/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_doctor_from_hospital(
