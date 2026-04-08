@@ -44,24 +44,29 @@ const Dashboard = () => {
       </div>
       <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {pending.length === 0 && <p style={{ color: "var(--text-muted)", padding: 20 }}>No pending appointments</p>}
+      <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        {pending.length === 0 && <p style={{ color: "var(--text-muted)", padding: 20 }}>No pending appointments</p>}
         {pending.map(apt => (
-          <div key={apt.id} className="glass-card card" style={{ padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <h3 className="text-lg font-bold font-display" style={{ color: "var(--text-primary)", marginBottom: 6 }}>{apt.patient?.full_name}</h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{apt.reason}</p>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <StatusBadge status={apt.type} />
-                <span style={{ fontSize: 13, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 500 }}>
-                  {apt.appointment_date} <span style={{ opacity: 0.5 }}>·</span> {apt.appointment_time}
-                </span>
+          <div key={apt.id} className="glass-card card" style={{ width: "100%" }}>
+            <div className="card-inner" style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 20, padding: "24px 32px" }}>
+              <div style={{ flex: "1 1 300px" }}>
+                <h3 className="text-xl font-bold font-display" style={{ color: "var(--text-primary)", marginBottom: 8 }}>{apt.patient?.full_name}</h3>
+                <p style={{ color: "var(--text-secondary)", fontSize: 14, fontWeight: 500, marginBottom: 12, lineHeight: 1.5 }}>{apt.reason}</p>
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 14 }}>
+                  <StatusBadge status={apt.type} />
+                  <span style={{ fontSize: 13, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 600 }}>
+                    📅 {apt.appointment_date} <span style={{ opacity: 0.3, margin: "0 4px" }}>|</span> 🕐 {apt.appointment_time}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div style={{ display: "flex", gap: 12 }}>
-              <button className="btn-primary" style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600 }}>Approve</button>
-              <button className="btn-danger" style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600 }}>Reject</button>
+              <div style={{ display: "flex", gap: 12, flexShrink: 0 }}>
+                <button className="btn-primary" style={{ padding: "12px 24px", fontSize: 13 }}>Approve</button>
+                <button className="btn-danger" style={{ padding: "12px 24px", fontSize: 13 }}>Reject</button>
+              </div>
             </div>
           </div>
         ))}
+      </div>
       </div>
     </DashboardLayout>
   )
