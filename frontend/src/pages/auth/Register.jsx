@@ -38,7 +38,13 @@ const Register = () => {
         email: form.email,
         password: form.password,
         phone: form.phone || undefined,
-        role: role
+        role: role,
+        full_name: form.full_name,
+        // Role specific extras
+        license_number: extra.license_number || undefined,
+        specialization: extra.specialization || undefined,
+        hospital_name: extra.hospital_name || undefined,
+        registration_number: extra.registration_number || undefined
       }
 
       await registerApi(requestData)

@@ -1,23 +1,25 @@
 import api from "./axios"
 
-/**
- * Fetch all appointments for the logged-in doctor
- */
-export const getDoctorAppointments = () => {
-    return api.get("/doctor/appointments")
+// --- APPOINTMENTS ---
+export const getDoctorAppointments = () => api.get("/doctor/appointments")
+export const updateAppointmentStatus = (id, statusOrPayload, notes = "", rejection_reason = "") => {
+    const payload = typeof statusOrPayload === "object"
+        ? statusOrPayload
+        : { status: statusOrPayload, notes, rejection_reason }
+    return api.patch(`/doctor/appointments/${id}/status`, payload)
 }
+export const getReceivedConsents = () => api.get("/patient/consents/doctor/received")
+export const getDoctorPatients = () => api.get("/doctor/patients")
+export const getDoctorPatientRecords = (patientId) => api.get(`/doctor/patients/${patientId}/records`)
 
-/**
- * Update the status of an appointment
- * @param {string} id - Appointment UUID
- * @param {string} status - New status (confirmed, rejected, completed)
- * @param {string} notes - Optional clinical notes
- * @param {string} rejection_reason - Optional reason for rejection
- */
-export const updateAppointmentStatus = (id, status, notes = "", rejection_reason = "") => {
-    return api.patch(`/doctor/appointments/${id}/status`, {
-        status,
-        notes,
-        rejection_reason
-    })
-}
+// --- PRESCRIPTIONS ---
+export const getIssuedPrescriptions = () => api.get("/doctor/prescriptions")
+export const createPrescription = (data) => api.post("/doctor/prescriptions", data)
+
+// --- SCHEDULE & SLOTS ---
+export const getSchedule = () => api.get("/doctor/schedules")
+export const updateSchedule = (schedules) => api.post("/doctor/schedules", schedules)
+
+// --- PROFILE ---
+export const getDoctorProfile = () => api.get("/doctor/profile")
+export const updateDoctorProfile = (data) => api.put("/doctor/profile", data)
