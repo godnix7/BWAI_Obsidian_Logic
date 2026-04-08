@@ -13,3 +13,4 @@ qrcode[pil]
 pillow
 cryptography
 httpx
+email-validator

@@ -70,10 +70,10 @@ const Sidebar = ({ role, collapsed, setCollapsed }) => {
         }}>
           <Link to="/" style={{ textDecoration: "none" }}>
             <h2 style={{
-              fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800,
-              letterSpacing: "0.05em", color: "var(--eggplant)", margin: 0
+              fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700,
+              letterSpacing: "0.02em", color: "var(--eggplant)", margin: 0
             }}>
-              MEDI LOCKER
+              MediLocker
             </h2>
           </Link>
         </div>
@@ -89,7 +89,7 @@ const Sidebar = ({ role, collapsed, setCollapsed }) => {
           onMouseEnter={(e) => e.currentTarget.style.background = "var(--glass-light)"}
           onMouseLeave={(e) => e.currentTarget.style.background = "rgba(10, 17, 40, 0.05)"}
         >
-          {collapsed ? <Menu size={22} /> : <X size={22} />}
+          {collapsed ? <Menu size={22} /> : <Menu size={22} />}
         </button>
       </div>
 

@@ -1,9 +1,8 @@
+import uuid
+import traceback
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
-from jose import jwt, JWTError
-import uuid
-import traceback
 
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
@@ -21,7 +20,6 @@ async def register_user(db: AsyncSession, data) -> User:
                 detail="Email is already registered"
             )
         
-        # antigravity | unified user creation with hashed password
         # Create the user
         new_user = User(
             email=data.email,
@@ -40,19 +38,17 @@ async def register_user(db: AsyncSession, data) -> User:
     
     await db.refresh(new_user)
     
-    # nischay | redis integration
-    # Mock Email Send (can be expanded later)
+    # Mock Email Verification
     email_token = str(uuid.uuid4())
     if redis_client:
         try:
             await redis_client.setex(f"email_verify:{email_token}", 86400, new_user.email)
         except Exception as e:
             print(f"Warning: Redis offline, skipping email verification cache ({e})")
-    print(f"MOCK EMAIL: Sent verification link to {new_user.email}: /auth/verify-email?token={email_token}")
     
     return new_user
 
-# antigravity | unified login logic with redis tokens
+# antigravity | unified login logic with tokens
 async def login_user(db: AsyncSession, email: str, password: str):
     # 1. Find user by email
     result = await db.execute(select(User).where(User.email == email))
@@ -73,66 +69,84 @@ async def login_user(db: AsyncSession, email: str, password: str):
         
     # 3. Generate tokens
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
-    refresh_token = create_refresh_token(data={"sub": str(user.id), "role": user.role.value})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
-    # Store refresh token in redis to handle revocation (logout)
+    # Store refresh token if redis is available
     if redis_client:
         try:
             await redis_client.setex(f"refresh_token:{str(user.id)}", 7 * 86400, refresh_token)
-        except Exception as e:
-            print(f"Warning: Redis offline, skipping refresh_token cache ({e})")
-    
-    return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
+        except Exception:
+            pass
+
+    return {
+        "access_token": access_token, 
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": user
+    }
 
 # antigravity | token refresh mechanism
 async def refresh_access_token(db: AsyncSession, refresh_token: str):
-    try:
-        payload = jwt.decode(refresh_token, settings.SECRET_KEY, algorithms=["HS256"])
-        if payload.get("type") != "refresh":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token type")
-        user_id = payload.get("sub")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    from app.core.security import decode_token
+    payload = decode_token(refresh_token)
+    
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
         
+    user_id = payload.get("sub")
+    
+    # Optional: Redis revocation check
     if redis_client:
-        stored_token = await redis_client.get(f"refresh_token:{user_id}")
-        if stored_token != refresh_token:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token revoked or expired")
-        
+        try:
+            stored_token = await redis_client.get(f"refresh_token:{user_id}")
+            if stored_token and stored_token != refresh_token:
+                raise HTTPException(status_code=401, detail="Token revoked")
+        except Exception:
+            pass
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
         
     new_access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
-    return {"access_token": new_access_token, "refresh_token": refresh_token, "user": user}
+    return {
+        "access_token": new_access_token, 
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": user
+    }
 
-# antigravity | secure logout
 async def logout_user(user_id: str):
     if redis_client:
-        await redis_client.delete(f"refresh_token:{user_id}")
+        try:
+            await redis_client.delete(f"refresh_token:{user_id}")
+        except Exception:
+            pass
     return True
 
-# nischay | password reset process
 async def request_password_reset(email: str):
     token = str(uuid.uuid4())
     if redis_client:
-        await redis_client.setex(f"pwd_reset:{token}", 900, email) # 15 minutes
-    print(f"MOCK EMAIL: Reset password link for {email}: /auth/reset-password?token={token}")
+        try:
+            await redis_client.setex(f"pwd_reset:{token}", 900, email)
+        except Exception:
+            pass
     return True
 
 async def reset_password(db: AsyncSession, token: str, new_password: str):
     if not redis_client:
-         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Redis not configured")
+         raise HTTPException(status_code=500, detail="Redis connection required for password reset")
          
     email = await redis_client.get(f"pwd_reset:{token}")
     if not email:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
+        raise HTTPException(status_code=400, detail="Invalid or expired token")
         
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise HTTPException(status_code=404, detail="User not found")
         
     user.password_hash = hash_password(new_password)
     await db.commit()
