@@ -46,20 +46,22 @@ const Dashboard = () => {
             View All <ArrowRight size={14} />
           </Link>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 20 }}>
           {appointments.filter(a => ["pending", "confirmed"].includes(a.status)).slice(0, 3).map(apt => (
-            <div key={apt.id} className="glass-card card" style={{ padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <p style={{ fontWeight: 600 }}>{apt.doctor?.full_name}</p>
+            <div key={apt.id} className="glass-card card" style={{ padding: "24px 28px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <p className="font-bold font-display" style={{ color: "var(--text-primary)", fontSize: 16 }}>{apt.doctor?.full_name}</p>
                 <StatusBadge status={apt.status} />
               </div>
-              <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>{apt.doctor?.specialization}</p>
-              <div style={{ display: "flex", gap: 16, marginTop: 12, fontSize: 13, color: "var(--text-secondary)" }}>
+              <p style={{ color: "var(--text-secondary)", fontSize: 13, fontWeight: 500 }}>{apt.doctor?.specialization}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8, fontSize: 13, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
                 <span>📅 {apt.appointment_date}</span>
                 <span>🕐 {apt.appointment_time}</span>
+              </div>
+              <div style={{ marginTop: 8 }}>
                 <StatusBadge status={apt.type} />
               </div>
-              <p style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 8 }}>{apt.reason}</p>
+              <p style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 12, lineHeight: 1.5 }}>{apt.reason}</p>
             </div>
           ))}
         </div>
@@ -73,14 +75,14 @@ const Dashboard = () => {
             View All <ArrowRight size={14} />
           </Link>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
           {records.slice(0, 4).map(rec => (
-            <div key={rec.id} className="glass-card card" style={{ padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-                <p style={{ fontWeight: 600, fontSize: 14 }}>{rec.title}</p>
+            <div key={rec.id} className="glass-card card" style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 10 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <p className="font-bold font-display" style={{ color: "var(--text-primary)", fontSize: 15 }}>{rec.title}</p>
                 <StatusBadge status={rec.record_type} />
               </div>
-              <p style={{ color: "var(--text-muted)", fontSize: 12 }}>{rec.record_date}</p>
+              <p style={{ color: "var(--text-muted)", fontSize: 12, fontFamily: "var(--font-mono)" }}>{rec.record_date}</p>
             </div>
           ))}
         </div>

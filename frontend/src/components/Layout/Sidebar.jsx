@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/authStore"
 import {
   LayoutDashboard, FileText, Calendar, User, Shield, ShieldCheck,
   QrCode, Users, Pill, Stethoscope, ClipboardPlus, Clock, Building2,
-  TestTube, CreditCard, LogOut
+  TestTube, CreditCard, LogOut, Menu, X
 } from "lucide-react"
 
 const iconMap = {
@@ -42,27 +42,56 @@ const menus = {
   ]
 }
 
-const Sidebar = ({ role }) => {
+const Sidebar = ({ role, collapsed, setCollapsed }) => {
   const location = useLocation()
   const { logout } = useAuthStore()
   const items = menus[role] || []
 
   return (
     <aside style={{
-      width: 260, height: "100vh", position: "sticky", top: 0,
+      width: collapsed ? "var(--collapsed-width)" : "var(--sidebar-width)",
+      height: "100vh", position: "sticky", top: 0,
       background: "var(--glass-medium)", backdropFilter: "blur(24px)",
-      borderRight: "1px solid var(--border-default)", padding: "24px 16px",
-      display: "flex", flexDirection: "column", flexShrink: 0
+      borderRight: "1px solid var(--border-default)", padding: "24px 12px",
+      display: "flex", flexDirection: "column", flexShrink: 0,
+      transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      overflowX: "hidden"
     }}>
-      <Link to="/" style={{ textDecoration: "none" }}>
-        <h2 style={{
-          fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700,
-          letterSpacing: "0.05em", marginBottom: 32, paddingLeft: 8,
-          color: "var(--eggplant)"
+      <div style={{ 
+        display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", 
+        marginBottom: 32, padding: "0 8px" 
+      }}>
+        <div style={{ 
+          opacity: collapsed ? 0 : 1, 
+          width: collapsed ? 0 : "auto",
+          transition: "all 0.3s ease",
+          overflow: "hidden",
+          whiteSpace: "nowrap"
         }}>
-          MEDI LOCKER
-        </h2>
-      </Link>
+          <Link to="/" style={{ textDecoration: "none" }}>
+            <h2 style={{
+              fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 800,
+              letterSpacing: "0.05em", color: "var(--eggplant)", margin: 0
+            }}>
+              MEDI LOCKER
+            </h2>
+          </Link>
+        </div>
+        <button 
+          onClick={() => setCollapsed(!collapsed)}
+          style={{
+            background: "rgba(10, 17, 40, 0.05)", border: "1px solid var(--border-subtle)",
+            borderRadius: "12px", padding: "8px", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            transition: "all 0.2s ease", color: "var(--text-primary)",
+            flexShrink: 0
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = "var(--glass-light)"}
+          onMouseLeave={(e) => e.currentTarget.style.background = "rgba(10, 17, 40, 0.05)"}
+        >
+          {collapsed ? <Menu size={22} /> : <X size={22} />}
+        </button>
+      </div>
 
       <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
         {items.map((item) => {
@@ -71,18 +100,28 @@ const Sidebar = ({ role }) => {
           return (
             <Link key={item.path} to={item.path} style={{ textDecoration: "none" }}>
               <div style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "10px 12px", borderRadius: 10, fontSize: 14, fontWeight: 500,
+                display: "flex", alignItems: "center", gap: 12,
+                padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 500,
                 color: isActive ? "var(--accent)" : "var(--text-secondary)",
                 background: isActive ? "var(--accent-soft)" : "transparent",
-                borderLeft: isActive ? "3px solid var(--accent)" : "3px solid transparent",
+                borderLeft: !collapsed && isActive ? "4px solid var(--accent)" : "4px solid transparent",
                 transition: "all 0.2s ease",
+                justifyContent: collapsed ? "center" : "flex-start",
+                width: "100%"
               }}
                 onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "var(--glass-light)"; e.currentTarget.style.color = "var(--text-primary)" }}}
                 onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)" }}}
               >
-                {Icon && <Icon size={18} />}
-                <span>{item.name}</span>
+                {Icon && <Icon size={20} style={{ flexShrink: 0 }} />}
+                {!collapsed && (
+                  <span style={{ 
+                    whiteSpace: "nowrap", 
+                    opacity: collapsed ? 0 : 1,
+                    transition: "opacity 0.2s ease"
+                  }}>
+                    {item.name}
+                  </span>
+                )}
               </div>
             </Link>
           )
@@ -91,17 +130,18 @@ const Sidebar = ({ role }) => {
 
       <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 16 }}>
         <button onClick={() => { logout(); window.location.href = "/login" }} style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "10px 12px", borderRadius: 10, fontSize: 14, fontWeight: 500,
+          display: "flex", alignItems: "center", gap: 12,
+          padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 600,
           color: "var(--text-secondary)", background: "transparent", border: "none",
           cursor: "pointer", width: "100%", fontFamily: "var(--font-body)",
           transition: "all 0.2s",
+          justifyContent: collapsed ? "center" : "flex-start"
         }}
           onMouseEnter={(e) => { e.currentTarget.style.color = "var(--error)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)" }}
           onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "transparent" }}
         >
-          <LogOut size={18} />
-          <span>Logout</span>
+          <LogOut size={20} style={{ flexShrink: 0 }} />
+          {!collapsed && <span style={{ whiteSpace: "nowrap" }}>Logout</span>}
         </button>
       </div>
     </aside>
