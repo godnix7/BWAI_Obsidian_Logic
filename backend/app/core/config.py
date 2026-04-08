@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     # nischay | patient security
     # Patient / QR settings 
     QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
+    BASE_URL: str = "http://localhost:8000"  # For generating absolute QR URLs
 
     # nischay | cors settings
     # CORS
