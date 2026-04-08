@@ -42,21 +42,23 @@ const Dashboard = () => {
           View All <ArrowRight size={14} />
         </Link>
       </div>
-      <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {pending.length === 0 && <p style={{ color: "var(--text-muted)", padding: 20 }}>No pending appointments</p>}
         {pending.map(apt => (
-          <div key={apt.id} className="glass-card card" style={{ padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div key={apt.id} className="glass-card card" style={{ padding: "24px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h3 style={{ fontWeight: 600, marginBottom: 4 }}>{apt.patient?.full_name}</h3>
-              <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>{apt.reason}</p>
-              <div style={{ display: "flex", gap: 8, marginTop: 6 }}>
+              <h3 className="text-lg font-bold font-display" style={{ color: "var(--text-primary)", marginBottom: 6 }}>{apt.patient?.full_name}</h3>
+              <p style={{ color: "var(--text-secondary)", fontSize: 13, fontWeight: 500, marginBottom: 8 }}>{apt.reason}</p>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <StatusBadge status={apt.type} />
-                <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{apt.appointment_date} · {apt.appointment_time}</span>
+                <span style={{ fontSize: 13, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 500 }}>
+                  {apt.appointment_date} <span style={{ opacity: 0.5 }}>·</span> {apt.appointment_time}
+                </span>
               </div>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              <button className="btn-primary" style={{ padding: "8px 16px", fontSize: 13 }}>Approve</button>
-              <button className="btn-danger" style={{ padding: "8px 16px", fontSize: 13 }}>Reject</button>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button className="btn-primary" style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600 }}>Approve</button>
+              <button className="btn-danger" style={{ padding: "10px 20px", fontSize: 13, fontWeight: 600 }}>Reject</button>
             </div>
           </div>
         ))}

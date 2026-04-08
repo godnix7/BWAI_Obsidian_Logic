@@ -27,59 +27,65 @@ const Patients = () => {
             const isOpen = expanded === consent.id
 
             return (
-              <div key={consent.id} className="glass-card card" style={{ padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
-                  onClick={() => setExpanded(isOpen ? null : consent.id)}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                      <h3 style={{ fontWeight: 600 }}>{patient.full_name}</h3>
-                      <StatusBadge status={consent.access_level} />
+              <div key={consent.id} className="glass-card card" style={{ width: "100%" }}>
+                <div className="card-inner">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", cursor: "pointer" }}
+                    onClick={() => setExpanded(isOpen ? null : consent.id)}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                        <h3 className="text-2xl font-bold font-display" style={{ color: "var(--text-primary)" }}>{patient.full_name}</h3>
+                        <StatusBadge status={consent.access_level} />
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "16px 32px", fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>🩸 <span style={{ fontWeight: 700 }}>{patient.blood_group}</span></span>
+                        <span style={{ display: "flex", alignItems: "center", gap: 8 }}>📧 <span style={{ fontWeight: 600 }}>{patient.email}</span></span>
+                        {consent.expires_at && <span style={{ display: "flex", alignItems: "center", gap: 8 }}>⏰ <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>Expires:</span> {consent.expires_at.split("T")[0]}</span>}
+                      </div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+                        {consent.record_types_allowed.map(t => <StatusBadge key={t} status={t} />)}
+                      </div>
                     </div>
-                    <div style={{ display: "flex", gap: 8, fontSize: 12, color: "var(--text-secondary)" }}>
-                      <span>🩸 {patient.blood_group}</span>
-                      <span>📧 {patient.email}</span>
-                      {consent.expires_at && <span>⏰ Expires: {consent.expires_at.split("T")[0]}</span>}
-                    </div>
-                    <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
-                      {consent.record_types_allowed.map(t => <StatusBadge key={t} status={t} />)}
+                    <div style={{ paddingLeft: 24 }}>
+                      {isOpen ? <ChevronUp size={28} color="var(--text-muted)" /> : <ChevronDown size={28} color="var(--text-muted)" />}
                     </div>
                   </div>
-                  {isOpen ? <ChevronUp size={20} color="var(--text-muted)" /> : <ChevronDown size={20} color="var(--text-muted)" />}
-                </div>
 
-                {isOpen && (
-                  <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border-subtle)" }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 16, padding: 12, background: "var(--glass-light)", borderRadius: 10 }}>
-                      <div><span className="input-label">Gender</span><p>{patient.gender}</p></div>
-                      <div><span className="input-label">DOB</span><p>{patient.date_of_birth}</p></div>
-                      <div><span className="input-label">Allergies</span>
-                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-                          {patient.allergies.length > 0 ? patient.allergies.map(a => <span key={a} className="badge badge-warning">{a}</span>) : <span style={{ color: "var(--text-muted)" }}>None</span>}
-                        </div></div>
-                    </div>
+                  {isOpen && (
+                    <div style={{ marginTop: 24, paddingTop: 24, borderTop: "2px solid var(--border-subtle)" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 16, marginBottom: 20, padding: 20, background: "var(--glass-light)", borderRadius: 16 }}>
+                        <div><span className="input-label">Gender</span><p style={{ fontWeight: 600 }}>{patient.gender}</p></div>
+                        <div><span className="input-label">DOB</span><p style={{ fontWeight: 600 }}>{patient.date_of_birth}</p></div>
+                        <div>
+                          <span className="input-label">Allergies</span>
+                          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+                            {patient.allergies.length > 0 ? patient.allergies.map(a => <span key={a} className="badge badge-warning">{a}</span>) : <span style={{ color: "var(--text-muted)" }}>None</span>}
+                          </div>
+                        </div>
+                      </div>
 
-                    <p className="input-label" style={{ marginBottom: 8 }}>Accessible Records ({records.length})</p>
-                    {records.length === 0 ? <p style={{ color: "var(--text-muted)", fontSize: 13 }}>No records available</p> : (
-                      <div style={{ display: "grid", gap: 8 }}>
-                        {records.map(rec => (
-                          <div key={rec.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 12, borderRadius: 10, background: "var(--glass-light)", border: "1px solid var(--border-subtle)" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                              <FileText size={16} color="var(--text-muted)" />
-                              <div>
-                                <p style={{ fontWeight: 500, fontSize: 14 }}>{rec.title}</p>
-                                <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{rec.record_date}</span>
+                      <p className="input-label" style={{ marginBottom: 12, fontSize: 13 }}>Accessible Records ({records.length})</p>
+                      {records.length === 0 ? <p style={{ color: "var(--text-muted)", fontSize: 13 }}>No records available</p> : (
+                        <div style={{ display: "grid", gap: 10 }}>
+                          {records.map(rec => (
+                            <div key={rec.id} style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", borderRadius: 14, background: "var(--glass-light)", border: "1px solid var(--border-subtle)", gap: 16 }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                                <FileText size={18} color="var(--accent)" />
+                                <div>
+                                  <p style={{ fontWeight: 600, fontSize: 15 }}>{rec.title}</p>
+                                  <span style={{ fontSize: 12, color: "var(--text-muted)", fontFamily: "var(--font-mono)", fontWeight: 500 }}>{rec.record_date}</span>
+                                </div>
+                              </div>
+                              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                <StatusBadge status={rec.record_type} />
+                                <button className="btn-ghost" style={{ padding: 8 }}><Eye size={18} /></button>
                               </div>
                             </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <StatusBadge status={rec.record_type} />
-                              <button className="btn-ghost" style={{ padding: 6 }}><Eye size={14} /></button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}

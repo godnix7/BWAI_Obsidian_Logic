@@ -45,24 +45,28 @@ const Appointments = () => {
       {filtered.length === 0 ? (
         <EmptyState icon={Calendar} title="No appointments" description="Book your first appointment" />
       ) : (
-        <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {filtered.map(apt => (
-            <div key={apt.id} className="glass-card card" style={{ padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-                  <h3 style={{ fontWeight: 600 }}>{apt.doctor?.full_name}</h3>
-                  <StatusBadge status={apt.status} />
-                  <StatusBadge status={apt.type} />
+            <div key={apt.id} className="glass-card card" style={{ width: "100%", height: "auto" }}>
+              <div className="card-inner" style={{ display: "flex", flexWrap: "wrap", gap: 32, justifyContent: "space-between", alignItems: "flex-start", padding: "32px 40px" }}>
+                <div style={{ flex: "1 1 350px", minWidth: 300 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 16, marginBottom: 14 }}>
+                    <h3 className="text-2xl font-bold font-display" style={{ color: "var(--text-primary)" }}>{apt.doctor?.full_name}</h3>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <StatusBadge status={apt.status} />
+                      <StatusBadge status={apt.type} />
+                    </div>
+                  </div>
+                  <p style={{ color: "var(--text-secondary)", fontSize: 15, fontWeight: 600 }}>{apt.doctor?.specialization}</p>
+                  <p style={{ color: "var(--text-muted)", fontSize: 13, marginTop: 12, lineHeight: 1.7, maxWidth: "600px" }}>{apt.reason}</p>
                 </div>
-                <p style={{ color: "var(--text-secondary)", fontSize: 13 }}>{apt.doctor?.specialization}</p>
-                <p style={{ color: "var(--text-muted)", fontSize: 12, marginTop: 4 }}>{apt.reason}</p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 600 }}>{apt.appointment_date}</p>
-                <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-secondary)" }}>{apt.appointment_time}</p>
-                {["pending", "confirmed"].includes(apt.status) && (
-                  <button className="btn-danger" style={{ marginTop: 8, padding: "6px 14px", fontSize: 12 }}>Cancel</button>
-                )}
+                <div style={{ textAlign: "right", minWidth: 180, paddingLeft: 40, borderLeft: "3px solid var(--border-subtle)", alignSelf: "stretch", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 15, fontWeight: 700, color: "var(--eggplant)" }}>{apt.appointment_date}</p>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--text-secondary)", marginTop: 2 }}>{apt.appointment_time}</p>
+                  {["pending", "confirmed"].includes(apt.status) && (
+                    <button className="btn-danger" style={{ marginTop: 12, padding: "8px 16px", fontSize: 12 }}>Cancel</button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
