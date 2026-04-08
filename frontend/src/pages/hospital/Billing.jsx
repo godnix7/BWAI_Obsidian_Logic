@@ -6,10 +6,11 @@ import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
 import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { CreditCard, Plus, Trash2, Eye, Loader2, IndianRupee } from "lucide-react"
-import { getInvoices, createInvoice, updateInvoice } from "@/api/Hospital.api"
+import { getInvoices, createInvoice, updateInvoice, getHospitalPatients } from "@/api/Hospital.api"
 
 const Billing = () => {
   const [invoices, setInvoices] = useState([])
+  const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
@@ -29,8 +30,12 @@ const Billing = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const res = await getInvoices()
-      setInvoices(res.data)
+      const [invoiceRes, patientRes] = await Promise.all([
+        getInvoices(),
+        getHospitalPatients()
+      ])
+      setInvoices(invoiceRes.data)
+      setPatients(patientRes.data)
     } catch (err) {
       console.error("Failed to fetch billing:", err)
     } finally {
@@ -185,8 +190,14 @@ const Billing = () => {
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <div>
-                  <label className="input-label">Patient ID</label>
-                  <input className="input" placeholder="Paste Patient UIID here" value={formData.patient_id} onChange={e => setFormData({...formData, patient_id: e.target.value})} />
+                  <label className="input-label">Patient</label>
+                  <select className="input" value={formData.patient_id} onChange={e => setFormData({...formData, patient_id: e.target.value})}>
+                      <option value="">Select a patient...</option>
+                      {patients.length === 0 && <option disabled>No consented patients found</option>}
+                      {patients.map(p => (
+                          <option key={p.patient_id} value={p.patient_id}>{p.patient_name}</option>
+                      ))}
+                  </select>
               </div>
               <div>
                   <label className="input-label">Initial Status</label>

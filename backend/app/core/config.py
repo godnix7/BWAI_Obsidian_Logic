@@ -23,19 +23,26 @@ class Settings(BaseSettings):
     BASE_URL: str = "http://localhost:8002"
 
     # File storage
-    FILE_STORAGE_BACKEND: str = "local"
+    FILE_STORAGE_BACKEND: str = "local"  # local | s3
     S3_BUCKET_NAME: str = "medilocker-records"
+    S3_ACCESS_KEY_ID: Optional[str] = None
+    S3_SECRET_ACCESS_KEY: Optional[str] = None
+    S3_REGION: str = "us-east-1"
+    S3_ENDPOINT_URL: Optional[str] = None
+    S3_PUBLIC_BASE_URL: Optional[str] = None
+    S3_USE_SSL: bool = True
     
     # email settings
-    MAIL_USERNAME: str = "user@example.com"
-    MAIL_PASSWORD: str = "yourpassword"
-    MAIL_FROM: str = "noreply@medilocker.com"
+    MAIL_USERNAME: Optional[str] = None
+    MAIL_PASSWORD: Optional[str] = None
+    MAIL_FROM: Optional[str] = None
     MAIL_PORT: int = 587
     MAIL_SERVER: str = "smtp.gmail.com"
     MAIL_FROM_NAME: str = "MEDI LOCKER"
     MAIL_STARTTLS: bool = True
     MAIL_SSL_TLS: bool = False
     USE_CREDENTIALS: bool = True
+    VALIDATE_CERTS: bool = True
 
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"

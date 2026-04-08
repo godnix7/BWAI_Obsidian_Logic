@@ -7,7 +7,7 @@ import { pageEnter, cardStagger } from "@/utils/animations"
 import { Users, ChevronDown, ChevronUp, FileText, Loader2, User as UserIcon, ClipboardPlus } from "lucide-react"
 import { getDoctorPatients, getDoctorPatientRecords } from "@/api/Doctor.api"
 
-const API_BASE = "http://127.0.0.1:8002"
+const API_BASE = `http://${window.location.hostname}:8002`
 const resolveUrl = (url) => url?.startsWith("http") ? url : `${API_BASE}${url}`
 
 const Patients = () => {

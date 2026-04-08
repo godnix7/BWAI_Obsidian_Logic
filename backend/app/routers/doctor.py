@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 from datetime import time
 
@@ -16,8 +16,9 @@ from app.schemas.clinical import (
 )
 from app.schemas.doctor_schema import DoctorProfileUpdate, DoctorScheduleCreate, DoctorScheduleRead
 from app.schemas.medical import PrescriptionRead, PrescriptionCreate
+from app.models.medical import Prescription, PrescriptionMedication
 
-router = APIRouter(tags=["doctor"])
+router = APIRouter(prefix="/doctor", tags=["Doctor"])
 
 @router.get("/public", response_model=List[dict])
 async def list_available_doctors(
@@ -108,27 +109,94 @@ async def update_doctor_profile(
 
 @router.get("/appointments", response_model=List[AppointmentRead])
 async def list_doctor_appointments(
+    status: Optional[str] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_doctor)
 ):
     """
-    List all appointments for the current logged-in doctor.
+    List appointments for the current doctor.
+    Optionally filter by status: ?status=confirmed
     """
     # 1. Get doctor profile ID
     res = await db.execute(
         select(DoctorProfile.id).where(DoctorProfile.user_id == current_user.id)
     )
     doctor_id = res.scalars().first()
-    
+
     if not doctor_id:
         raise HTTPException(status_code=404, detail="Doctor profile not found.")
 
-    # 2. Get appointments with patient info (lazy joined in model)
-    result = await db.execute(
-        select(Appointment).where(Appointment.doctor_id == doctor_id)
+    # 2. Build query with optional status filter
+    query = (
+        select(Appointment)
+        .where(Appointment.doctor_id == doctor_id)
+        .options(selectinload(Appointment.patient), selectinload(Appointment.doctor))
         .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc())
     )
+    if status:
+        query = query.where(Appointment.status == status)
+
+    result = await db.execute(query)
     return result.scalars().all()
+
+@router.get("/prescription-patients")
+async def get_prescription_patients(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_doctor)
+):
+    """
+    Returns ALL unique patients who have sent any appointment request to this doctor.
+    Used to populate the patient dropdown in prescription creation.
+    Deduplicates by patient_id and falls back to email if name is null.
+    """
+    # Get this doctor's profile ID
+    res = await db.execute(
+        select(DoctorProfile.id).where(DoctorProfile.user_id == current_user.id)
+    )
+    doctor_id = res.scalars().first()
+    if not doctor_id:
+        return []
+
+    # Get all unique patients who have ANY appointment with this doctor
+    result = await db.execute(
+        select(
+            Appointment.id.label("appointment_id"),
+            Appointment.appointment_date,
+            Appointment.patient_id,
+            PatientProfile.full_name,
+            PatientProfile.user_id.label("patient_user_id"),
+        )
+        .join(PatientProfile, Appointment.patient_id == PatientProfile.id)
+        .where(Appointment.doctor_id == doctor_id)
+        .order_by(Appointment.appointment_date.desc())
+    )
+    rows = result.all()
+
+    # Fetch user emails as display-name fallback when full_name is null
+    patient_user_ids = [r.patient_user_id for r in rows if r.patient_user_id]
+    emails: dict = {}
+    if patient_user_ids:
+        user_result = await db.execute(
+            select(User.id, User.email).where(User.id.in_(patient_user_ids))
+        )
+        for uid, email in user_result.all():
+            emails[uid] = email
+
+    # Deduplicate by patient_id (keep most recent appointment per patient)
+    seen = set()
+    unique_patients = []
+    for r in rows:
+        pid = str(r.patient_id)
+        if pid not in seen:
+            seen.add(pid)
+            unique_patients.append({
+                "appointment_id": str(r.appointment_id),
+                "appointment_date": str(r.appointment_date),
+                "patient_id": pid,
+                "patient_name": r.full_name or emails.get(r.patient_user_id, "Unknown Patient"),
+            })
+
+    return unique_patients
 
 @router.patch("/appointments/{id}/status", response_model=AppointmentRead)
 async def update_appointment_status(
@@ -147,7 +215,9 @@ async def update_appointment_status(
     doctor_id = res.scalars().first()
 
     result = await db.execute(
-        select(Appointment).where(Appointment.id == id, Appointment.doctor_id == doctor_id)
+        select(Appointment)
+        .where(Appointment.id == id, Appointment.doctor_id == doctor_id)
+        .options(selectinload(Appointment.patient), selectinload(Appointment.doctor))
     )
     appt = result.scalars().first()
     
@@ -374,7 +444,7 @@ async def get_my_schedule(
 
 @router.post("/schedules", response_model=List[DoctorScheduleRead])
 async def update_schedule(
-    schedules: List[DoctorScheduleCreate],
+    schedules: List[DoctorScheduleCreate] = Body(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_doctor)
 ):

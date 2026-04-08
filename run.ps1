@@ -71,14 +71,14 @@ if (Test-Path $backendPython) {
 }
 
 $backendCommand = if (Test-Path $backendPython) {
-    ".\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port $backendPort"
+    ".\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port $backendPort --reload"
 } elseif (Get-Command python -ErrorAction SilentlyContinue) {
-    "python -m uvicorn app.main:app --host 127.0.0.1 --port $backendPort"
+    "python -m uvicorn app.main:app --host 0.0.0.0 --port $backendPort --reload"
 } else {
-    "uv run uvicorn app.main:app --host 127.0.0.1 --port $backendPort"
+    "uv run uvicorn app.main:app --host 0.0.0.0 --port $backendPort --reload"
 }
 
-$frontendCommand = "npm run dev -- --host 127.0.0.1 --port $frontendPort"
+$frontendCommand = "npm run dev -- --host 0.0.0.0 --port $frontendPort"
 
 Write-Host "--- Launching Backend ---" -ForegroundColor Green
 Start-ServiceWindow -Title "MediLocker Backend" -WorkingDirectory $backendDir -Command $backendCommand

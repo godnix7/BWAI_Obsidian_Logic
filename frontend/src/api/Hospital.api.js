@@ -13,9 +13,12 @@ export const removeDoctorFromHospital = (id) => api.delete(`/hospital/doctors/${
 export const uploadLabReport = (formData) => api.post("/hospital/lab-reports", formData, {
     headers: { "Content-Type": "multipart/form-data" }
 })
-export const getUploadedReports = () => api.get("/hospital/lab-reports")
+export const getLabReports = () => api.get("/hospital/lab-reports")
+export const getUploadedReports = getLabReports  // alias kept for backwards compat
 export const getReceivedConsents = () => api.get("/patient/consents/hospital/received")
+export const getHospitalPatients = () => api.get("/hospital/patients")
 export const getHospitalPatientRecords = (patientId) => api.get(`/hospital/patients/${patientId}/records`)
+export const resolveEmergencyQR = (qr_payload) => api.post("/hospital/emergency-qr/resolve", { qr_payload })
 
 // --- BILLING & INVOICES ---
 export const getInvoices = () => api.get("/hospital/billing")

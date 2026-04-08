@@ -22,8 +22,10 @@ class AppointmentService:
             )
         )
         schedules = result.scalars().all()
+        # If no active schedules exist for this day, we return None to signify "no schedule"
+        # so is_slot_available can choose to allow it.
         if not schedules:
-            return []
+            return None
 
         # 2. Get existing booked appointments for that day
         appt_result = await db.execute(
@@ -55,6 +57,8 @@ class AppointmentService:
     async def is_slot_available(self, db: AsyncSession, doctor_id: uuid.UUID, appt_date: date, appt_time: time) -> bool:
         """Helper to verify if a specific slot is still available before booking."""
         available = await self.get_available_slots(db, doctor_id, appt_date)
+        if available is None:
+            return True  # Fail-open: allow booking if no schedules are configured
         return appt_time in available
 
 appointment_service = AppointmentService()

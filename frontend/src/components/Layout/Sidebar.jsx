@@ -36,6 +36,7 @@ const menus = {
     { name: "Dashboard", path: "/hospital", icon: "LayoutDashboard" },
     { name: "Doctors", path: "/hospital/doctors", icon: "Stethoscope" },
     { name: "Patients", path: "/hospital/patients", icon: "Users" },
+    { name: "Emergency Access", path: "/hospital/emergency-access", icon: "QrCode" },
     { name: "Lab Reports", path: "/hospital/lab-reports", icon: "TestTube" },
     { name: "Billing", path: "/hospital/billing", icon: "CreditCard" },
     { name: "Profile", path: "/hospital/profile", icon: "Building2" },

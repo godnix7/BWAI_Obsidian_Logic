@@ -57,7 +57,7 @@ async def change_password_route(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Change current user password (clears force_password_change)"""
+    """Change current user password"""
     from app.services.auth_service import change_user_password
     await change_user_password(
         db, current_user.id, old_password, new_password,

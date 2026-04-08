@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from typing import List
 from uuid import UUID
 from datetime import date
@@ -43,7 +44,9 @@ async def list_appointments(
         return []
 
     result = await db.execute(
-        select(Appointment).where(Appointment.patient_id == patient_id)
+        select(Appointment)
+        .where(Appointment.patient_id == patient_id)
+        .options(selectinload(Appointment.patient), selectinload(Appointment.doctor))
         .order_by(Appointment.appointment_date.desc(), Appointment.appointment_time.desc())
     )
     return result.scalars().all()

@@ -27,8 +27,6 @@ class UserResponse(BaseModel):
     role: UserRole
     is_active: bool
     is_verified: bool
-    force_password_change: bool = False
-    is_hospital_created: bool = False
 
     class Config:
         from_attributes = True
@@ -38,4 +36,3 @@ class AuthResponse(BaseModel):
     refresh_token: str
     token_type: str = "Bearer"
     user: UserResponse
-    force_password_change: bool = False

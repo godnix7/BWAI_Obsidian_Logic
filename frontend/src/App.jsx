@@ -30,6 +30,7 @@ import LearnMore from "@/pages/LearnMore"
 import HospitalDashboard from "@/pages/hospital/Dashboard"
 import HospitalDoctors from "@/pages/hospital/Doctors"
 import HospitalPatients from "@/pages/hospital/Patients"
+import HospitalEmergencyAccess from "@/pages/hospital/EmergencyAccess"
 import HospitalLabReports from "@/pages/hospital/LabReports"
 import HospitalBilling from "@/pages/hospital/Billing"
 import HospitalProfile from "@/pages/hospital/Profile"
@@ -75,6 +76,7 @@ export default function App() {
       <Route path="/hospital" element={<ProtectedRoute allowedRole="hospital"><HospitalDashboard /></ProtectedRoute>} />
       <Route path="/hospital/doctors" element={<ProtectedRoute allowedRole="hospital"><HospitalDoctors /></ProtectedRoute>} />
       <Route path="/hospital/patients" element={<ProtectedRoute allowedRole="hospital"><HospitalPatients /></ProtectedRoute>} />
+      <Route path="/hospital/emergency-access" element={<ProtectedRoute allowedRole="hospital"><HospitalEmergencyAccess /></ProtectedRoute>} />
       <Route path="/hospital/lab-reports" element={<ProtectedRoute allowedRole="hospital"><HospitalLabReports /></ProtectedRoute>} />
       <Route path="/hospital/billing" element={<ProtectedRoute allowedRole="hospital"><HospitalBilling /></ProtectedRoute>} />
       <Route path="/hospital/profile" element={<ProtectedRoute allowedRole="hospital"><HospitalProfile /></ProtectedRoute>} />

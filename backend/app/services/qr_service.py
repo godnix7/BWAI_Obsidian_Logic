@@ -1,20 +1,20 @@
 import json
 import qrcode
-import os
 from io import BytesIO
 from uuid import UUID
-from typing import Dict, Any, List
+from typing import Dict, Any
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.models.profile import PatientProfile
 from app.models.medical import MedicalRecord
-from app.core.config import settings
 from app.core.encryption import encrypt_qr_token, decrypt_qr_token
 from app.services.storage_service import storage_service
 
 class QRService:
+    PAYLOAD_PREFIX = "MEDILOCKER_EMERGENCY::"
+
     @staticmethod
     async def get_patient_profile(db: AsyncSession, user_id: UUID) -> PatientProfile:
         result = await db.execute(
@@ -49,11 +49,38 @@ class QRService:
             return defaults
 
     @staticmethod
+    def build_qr_payload(token: str) -> str:
+        return f"{QRService.PAYLOAD_PREFIX}{token}"
+
+    @staticmethod
+    def extract_token_from_payload(qr_payload: str) -> str:
+        if not qr_payload:
+            raise HTTPException(status_code=400, detail="QR payload is required.")
+
+        raw_payload = qr_payload.strip()
+
+        if raw_payload.startswith(QRService.PAYLOAD_PREFIX):
+            return raw_payload.split(QRService.PAYLOAD_PREFIX, 1)[1].strip()
+
+        # Backward compatibility for older QR codes that encoded the public URL.
+        marker = "/api/v1/emergency/"
+        if marker in raw_payload:
+            trailing = raw_payload.split(marker, 1)[1].strip()
+            return trailing.split("/", 1)[0].strip()
+
+        # Also accept direct token input from a scanner/manual paste.
+        return raw_payload
+
+    @staticmethod
     async def get_qr_config(db: AsyncSession, user_id: UUID) -> Dict[str, Any]:
         profile = await QRService.get_patient_profile(db, user_id)
         config = QRService.parse_config(profile.qr_secret_key)
+        qr_payload = None
+        if profile.qr_code_url:
+            qr_payload = QRService.build_qr_payload(encrypt_qr_token(str(profile.id)))
         return {
             "qr_code_url": profile.qr_code_url,
+            "qr_payload": qr_payload,
             "config": config
         }
 
@@ -68,9 +95,9 @@ class QRService:
     async def regenerate_qr(db: AsyncSession, user_id: UUID) -> Dict[str, Any]:
         profile = await QRService.get_patient_profile(db, user_id)
         token = encrypt_qr_token(str(profile.id))
-        emergency_url = f"{settings.BASE_URL}/api/v1/emergency/{token}"
+        qr_payload = QRService.build_qr_payload(token)
         qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(emergency_url)
+        qr.add_data(qr_payload)
         qr.make(fit=True)
         img = qr.make_image(fill_color="black", back_color="white")
         filename = f"qr_{profile.id}.png"
@@ -85,69 +112,50 @@ class QRService:
         await db.refresh(profile)
         return {
             "qr_code_url": profile.qr_code_url,
+            "qr_payload": qr_payload,
             "config": QRService.parse_config(profile.qr_secret_key)
         }
 
     @staticmethod
-    async def get_public_emergency_profile(db: AsyncSession, qr_token: str) -> Dict[str, Any]:
-        """
-        LIMITED ACCESS: Return only blood group, allergies, contact, and chronic conditions.
-        NO medical records shown here.
-        """
+    async def _get_profile_by_token(db: AsyncSession, qr_token: str) -> PatientProfile:
         patient_id_str = decrypt_qr_token(qr_token)
         if not patient_id_str:
             raise HTTPException(status_code=400, detail="Invalid token.")
-        patient_id = UUID(patient_id_str)
 
+        patient_id = UUID(patient_id_str)
         result = await db.execute(select(PatientProfile).where(PatientProfile.id == patient_id))
         profile = result.scalars().first()
         if not profile:
             raise HTTPException(status_code=404, detail="Profile not found.")
+        return profile
 
-        config = QRService.parse_config(profile.qr_secret_key)
-        response = {
-            "patient_name": profile.full_name if config.get("show_name") else "Emergency Patient",
-            "blood_group": profile.blood_group if config.get("show_blood_group") else None,
-            "allergies": profile.allergies if config.get("show_allergies") else [],
-            "chronic_conditions": profile.chronic_conditions if config.get("show_chronic_conditions") else [],
-            "emergency_contact": {
-                "name": profile.emergency_contact_name,
-                "phone": profile.emergency_contact_phone
-            } if config.get("show_emergency_contact") else None
-        }
-        return response
+    @staticmethod
+    async def resolve_qr_payload(db: AsyncSession, qr_payload: str) -> Dict[str, Any]:
+        token = QRService.extract_token_from_payload(qr_payload)
+        return await QRService.get_full_emergency_profile(db, token)
 
     @staticmethod
     async def get_full_emergency_profile(db: AsyncSession, qr_token: str) -> Dict[str, Any]:
         """
         FULL ACCESS: Return complete emergency profile including flagged medical records.
         """
-        patient_id_str = decrypt_qr_token(qr_token)
-        if not patient_id_str:
-            raise HTTPException(status_code=400, detail="Invalid token.")
-        patient_id = UUID(patient_id_str)
+        profile = await QRService._get_profile_by_token(db, qr_token)
 
-        result = await db.execute(select(PatientProfile).where(PatientProfile.id == patient_id))
-        profile = result.scalars().first()
-        if not profile:
-            raise HTTPException(status_code=404, detail="Profile not found.")
-
-        # 1. Base profile data (bypass visibility config for hospitals if needed, but we follow general rule)
+        config = QRService.parse_config(profile.qr_secret_key)
         response = {
-            "id": profile.id,
-            "full_name": profile.full_name,
-            "gender": profile.gender,
-            "date_of_birth": profile.date_of_birth,
-            "blood_group": profile.blood_group,
-            "allergies": profile.allergies or [],
-            "chronic_conditions": profile.chronic_conditions or [],
+            "patient_id": profile.id,
+            "patient_name": profile.full_name if config.get("show_name") else "Emergency Patient",
+            "gender": profile.gender if config.get("show_gender") else None,
+            "date_of_birth": profile.date_of_birth.isoformat() if profile.date_of_birth and config.get("show_dob") else None,
+            "blood_group": profile.blood_group if config.get("show_blood_group") else None,
+            "allergies": (profile.allergies or []) if config.get("show_allergies") else [],
+            "chronic_conditions": (profile.chronic_conditions or []) if config.get("show_chronic_conditions") else [],
             "emergency_contact": {
                 "name": profile.emergency_contact_name,
                 "phone": profile.emergency_contact_phone
-            }
+            } if config.get("show_emergency_contact") else None,
         }
 
-        # 2. Fetch emergency records
         rec_result = await db.execute(
             select(MedicalRecord).where(
                 MedicalRecord.patient_id == profile.id,
@@ -158,7 +166,7 @@ class QRService:
         response["emergency_records"] = [
             {
                 "title": r.title,
-                "record_type": r.record_type,
+                "record_type": str(r.record_type.value if hasattr(r.record_type, "value") else r.record_type),
                 "url": r.file_url 
             } for r in records
         ]

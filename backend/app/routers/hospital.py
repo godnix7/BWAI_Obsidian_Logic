@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -62,7 +62,7 @@ async def list_available_hospitals(
 
 @router.put("/profile")
 async def update_hospital_profile(
-    data: dict,
+    data: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_hospital)
 ):
@@ -280,83 +280,60 @@ async def list_hospital_doctors(
 
 @router.post("/doctors", status_code=status.HTTP_201_CREATED)
 async def register_hospital_doctor(
-    data: dict, # {full_name, email, specialization, license_number, years_experience, consultation_fee, department}
+    data: dict = Body(...),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_hospital)
 ):
     """
-    Hospital admin registers a new doctor.
-    - Creates User with auto-generated password.
-    - Emails credentials to doctor.
-    - Links doctor to hospital.
+    Hospital admin links an existing doctor to their hospital.
     """
-    # 1. Check if user already exists
-    existing_user_result = await db.execute(select(User).where(User.email == data["email"].lower()))
-    if existing_user_result.scalars().first():
-        raise HTTPException(status_code=400, detail="User with this email already exists.")
-
-    # 2. Get current hospital profile
+    # 1. Get current hospital profile
     hosp_res = await db.execute(select(HospitalProfile).where(HospitalProfile.user_id == current_user.id))
     hospital_profile = hosp_res.scalars().first()
 
-    # 3. Generate Random Password
-    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-    temp_password = ''.join(secrets.choice(alphabet) for _ in range(12))
+    doctor_id = data.get("doctor_id")
+    department = data.get("department", "General")
 
-    # 4. Create User
-    new_user = User(
-        email=data["email"].lower(),
-        password_hash=hash_password(temp_password),
-        role=UserRole.DOCTOR,
-        is_verified=True,
-        force_password_change=True,
-        is_hospital_created=True
+    if not doctor_id:
+        raise HTTPException(status_code=400, detail="doctor_id is required")
+
+    # 2. Verify doctor exists
+    doc_res = await db.execute(select(DoctorProfile).where(DoctorProfile.id == doctor_id))
+    doctor_profile = doc_res.scalars().first()
+
+    if not doctor_profile:
+        raise HTTPException(status_code=404, detail="Doctor not found.")
+
+    # 3. Check if already linked
+    existing = await db.execute(
+        select(HospitalDoctor).where(
+            HospitalDoctor.hospital_id == hospital_profile.id,
+            HospitalDoctor.doctor_id == doctor_profile.id
+        )
     )
-    db.add(new_user)
-    await db.flush()
+    if existing.scalars().first():
+        raise HTTPException(status_code=400, detail="Doctor already mapped to this hospital.")
 
-    # 5. Create Doctor Profile
-    new_doc = DoctorProfile(
-        user_id=new_user.id,
-        hospital_id=hospital_profile.id,
-        full_name=data["full_name"],
-        specialization=data["specialization"],
-        license_number=data["license_number"],
-        years_experience=data.get("years_experience", 0),
-        consultation_fee=data.get("consultation_fee", 0.0),
-        is_available=True
-    )
-    db.add(new_doc)
-    await db.flush()
-
-    # 6. Link in HospitalDoctor mapping
+    # 4. Link in HospitalDoctor mapping
     new_assoc = HospitalDoctor(
         hospital_id=hospital_profile.id,
-        doctor_id=new_doc.id,
-        department=data.get('department', 'General')
+        doctor_id=doctor_profile.id,
+        department=department
     )
     db.add(new_assoc)
 
-    # 7. Audit Logging
-    await audit_service.log_event(
+    # 5. Audit Logging
+    await audit_service.log_action(
         db=db,
         user_id=current_user.id,
-        action="DOCTOR_REGISTERED_BY_HOSPITAL",
+        action="DOCTOR_LINKED_BY_HOSPITAL",
         resource_type="DOCTOR",
-        resource_id=str(new_doc.id),
-        details={"doctor_email": data["email"]}
-    )
-
-    # 8. Send Email
-    await email_service.send_doctor_credentials_email(
-        doctor_full_name=data["full_name"],
-        doctor_email=data["email"].lower(),
-        temp_password=temp_password,
-        hospital_name=hospital_profile.hospital_name
+        resource_id=doctor_profile.id,
+        metadata={"doctor_id": str(doctor_profile.id), "department": department}
     )
 
     await db.commit()
-    return {"message": "Doctor registered successfully. Welcome email sent."}
+    return {"message": "Doctor linked successfully."}
 
 @router.delete("/doctors/{doctor_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_doctor_from_hospital(
@@ -381,6 +358,63 @@ async def remove_doctor_from_hospital(
     await db.delete(association)
     await db.commit()
     return None
+
+# --- PATIENTS LIST ---
+
+@router.get("/patients")
+async def list_hospital_patients(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_hospital)
+):
+    """
+    Returns all patients who have consented to this hospital.
+    Used to populate patient dropdowns in billing/invoice creation.
+    Falls back to email if profile name is null.
+    """
+    hosp_res = await db.execute(
+        select(HospitalProfile.id).where(HospitalProfile.user_id == current_user.id)
+    )
+    hospital_id = hosp_res.scalars().first()
+    if not hospital_id:
+        return []
+
+    # Get all patients who have granted consent to this hospital
+    from app.models.clinical import Consent, ConsentStatus
+    consent_result = await db.execute(
+        select(Consent.patient_id).where(
+            Consent.grantee_user_id == current_user.id,
+            Consent.status == ConsentStatus.ACTIVE
+        )
+    )
+    patient_ids = [row[0] for row in consent_result.all()]
+
+    if not patient_ids:
+        return []
+
+    # Get patient profiles
+    profiles_result = await db.execute(
+        select(PatientProfile.id, PatientProfile.full_name, PatientProfile.user_id)
+        .where(PatientProfile.id.in_(patient_ids))
+    )
+    profiles = profiles_result.all()
+
+    # Get user emails as fallback
+    user_ids = [p.user_id for p in profiles if p.user_id]
+    emails: dict = {}
+    if user_ids:
+        user_result = await db.execute(
+            select(User.id, User.email).where(User.id.in_(user_ids))
+        )
+        for uid, email in user_result.all():
+            emails[uid] = email
+
+    return [
+        {
+            "patient_id": str(p.id),
+            "patient_name": p.full_name or emails.get(p.user_id, "Unknown Patient"),
+        }
+        for p in profiles
+    ]
 
 # --- BILLING & INVOICES ---
 

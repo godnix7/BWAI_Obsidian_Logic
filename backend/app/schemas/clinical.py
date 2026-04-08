@@ -32,8 +32,8 @@ class AppointmentCreate(BaseModel):
 
 class PatientShort(BaseModel):
     id: UUID
-    full_name: str
-    gender: str
+    full_name: Optional[str] = None
+    gender: Optional[str] = None
     blood_group: Optional[str] = None
 
 class DoctorShort(BaseModel):

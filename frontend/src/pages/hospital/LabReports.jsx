@@ -6,14 +6,16 @@ import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
 import { pageEnter, cardStagger } from "@/utils/animations"
 import { TestTube, Upload, Search, Loader2, FileText, CheckCircle } from "lucide-react"
-import { uploadLabReport, getUploadedReports } from "@/api/Hospital.api"
+import { uploadLabReport, getUploadedReports, getReceivedConsents } from "@/api/Hospital.api"
 
 const LabReports = () => {
   const [reports, setReports] = useState([])
+  const [patients, setPatients] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploadSuccess, setUploadSuccess] = useState(false)
+  const [patientSearch, setPatientSearch] = useState("")
 
   // Form State
   const [formData, setFormData] = useState({
@@ -27,8 +29,25 @@ const LabReports = () => {
   const fetchReports = async () => {
     try {
       setLoading(true)
-      const res = await getUploadedReports()
-      setReports(res.data)
+      const [reportsRes, consentsRes] = await Promise.all([
+        getUploadedReports(),
+        getReceivedConsents()
+      ])
+      setReports(reportsRes.data)
+
+      const uniquePatients = []
+      const seen = new Set()
+      for (const consent of consentsRes.data || []) {
+        const patient = consent.patient
+        if (!patient || seen.has(patient.id)) continue
+        seen.add(patient.id)
+        uniquePatients.push({
+          id: patient.id,
+          full_name: patient.full_name || "Unknown Patient",
+          blood_group: patient.blood_group || "",
+        })
+      }
+      setPatients(uniquePatients)
     } catch (err) {
       console.error("Failed to fetch reports:", err)
     } finally {
@@ -62,6 +81,7 @@ const LabReports = () => {
           setUploadOpen(false)
           setFormData({ patient_id: "", title: "", record_date: new Date().toISOString().split("T")[0], description: "" })
           setFile(null)
+          setPatientSearch("")
           setTimeout(() => setUploadSuccess(false), 3000)
       } catch (err) {
           const detail = err.response?.data?.detail || "Upload failed. Ensure you have patient consent."
@@ -70,6 +90,16 @@ const LabReports = () => {
           setSubmitting(false)
       }
   }
+
+  const filteredPatients = patients.filter((patient) => {
+    const query = patientSearch.trim().toLowerCase()
+    if (!query) return true
+    return (
+      patient.full_name.toLowerCase().includes(query) ||
+      patient.id.toLowerCase().includes(query) ||
+      patient.blood_group.toLowerCase().includes(query)
+    )
+  })
 
   if (loading) return (
       <DashboardLayout>
@@ -118,12 +148,34 @@ const LabReports = () => {
         <Modal title="Upload Lab Report" onClose={() => setUploadOpen(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             <div>
-                <label className="input-label">Patient ID</label>
+                <label className="input-label">Search Patient</label>
                 <div style={{ position: "relative" }}>
                     <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-muted)" }} />
-                    <input className="input" placeholder="Paste Patient UIID here..." style={{ paddingLeft: 36 }} value={formData.patient_id} onChange={e => setFormData({...formData, patient_id: e.target.value})} />
+                    <input
+                      className="input"
+                      placeholder="Search by patient name, ID, or blood group..."
+                      style={{ paddingLeft: 36 }}
+                      value={patientSearch}
+                      onChange={e => setPatientSearch(e.target.value)}
+                    />
                 </div>
-                <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>Note: You must have active consent from the patient.</p>
+                <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>Only patients with active hospital consent are listed here.</p>
+            </div>
+            <div>
+                <label className="input-label">Select Patient</label>
+                <select
+                  className="input"
+                  value={formData.patient_id}
+                  onChange={e => setFormData({ ...formData, patient_id: e.target.value })}
+                >
+                  <option value="">Select a patient...</option>
+                  {filteredPatients.map(patient => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.full_name} - {patient.id.slice(0, 8)}{patient.blood_group ? ` - ${patient.blood_group}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {patients.length === 0 && <p style={{ fontSize: 10, color: "var(--text-muted)", marginTop: 4 }}>No consented patients available for upload.</p>}
             </div>
             <div>
                 <label className="input-label">Report Title</label>

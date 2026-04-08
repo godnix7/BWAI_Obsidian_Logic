@@ -8,7 +8,7 @@ import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { getRecords, uploadRecord, getRecordUrl, deleteRecord } from "@/api/Patient.api"
 import { Upload, FileText, Eye, Download, Trash2, Search, Loader2 } from "lucide-react"
 
-const API_BASE = "http://127.0.0.1:8002"
+const API_BASE = `http://${window.location.hostname}:8002`
 
 const Records = () => {
   const today = new Date().toISOString().split("T")[0]

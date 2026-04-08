@@ -63,6 +63,7 @@ const Profile = () => {
         allergies: form.allergies.split(",").map(s => s.trim()).filter(s => s),
         chronic_conditions: form.chronic_conditions.split(",").map(s => s.trim()).filter(s => s)
       }
+      if (!payload.date_of_birth) delete payload.date_of_birth;
       await updateProfile(payload)
       await fetchProfile()
       setSaveSuccess(true)

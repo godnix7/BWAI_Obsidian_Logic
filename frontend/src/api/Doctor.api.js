@@ -1,7 +1,8 @@
 import api from "./axios"
 
 // --- APPOINTMENTS ---
-export const getDoctorAppointments = () => api.get("/doctor/appointments")
+export const getDoctorAppointments = (status = null) => 
+    api.get("/doctor/appointments", { params: status ? { status } : {} })
 export const updateAppointmentStatus = (id, statusOrPayload, notes = "", rejection_reason = "") => {
     const payload = typeof statusOrPayload === "object"
         ? statusOrPayload
@@ -10,6 +11,7 @@ export const updateAppointmentStatus = (id, statusOrPayload, notes = "", rejecti
 }
 export const getReceivedConsents = () => api.get("/patient/consents/doctor/received")
 export const getDoctorPatients = () => api.get("/doctor/patients")
+export const getPrescriptionPatients = () => api.get("/doctor/prescription-patients")
 export const getDoctorPatientRecords = (patientId) => api.get(`/doctor/patients/${patientId}/records`)
 
 // --- PRESCRIPTIONS ---

@@ -5,7 +5,7 @@ import { pageEnter, glowPulse } from "@/utils/animations"
 import { QrCode, Download, RefreshCw, Eye, Loader2, AlertCircle } from "lucide-react"
 import { getQRConfig, updateQRConfig, regenerateQR, getProfile } from "@/api/Patient.api"
 
-const API_BASE = "http://127.0.0.1:8002"
+const API_BASE = `http://${window.location.hostname}:8002`
 
 const EmergencyQR = () => {
   const [patient, setPatient] = useState(null)
@@ -77,14 +77,23 @@ const EmergencyQR = () => {
     }
   }
 
-  const downloadQR = () => {
+  const downloadQR = async () => {
       if (!qrData?.qr_code_url) return
-      const link = document.createElement("a")
-      link.href = resolveUrl(qrData.qr_code_url)
-      link.download = `MediLocker_Emergency_QR.png`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+      try {
+        const response = await fetch(resolveUrl(qrData.qr_code_url))
+        const blob = await response.blob()
+        const objectUrl = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = objectUrl
+        link.download = "MediLocker_Emergency_QR.png"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(objectUrl)
+      } catch (err) {
+        console.error("Failed to download QR code:", err)
+        window.open(resolveUrl(qrData.qr_code_url), "_blank", "noopener,noreferrer")
+      }
   }
 
   if (loading) return (

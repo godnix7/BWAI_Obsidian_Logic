@@ -179,8 +179,7 @@ async def login_user(db: AsyncSession, email: str, password: str, ip_address: st
         "access_token": access_token, 
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "user": user,
-        "force_password_change": user.force_password_change
+        "user": user
     }
 
 # antigravity | token refresh mechanism
@@ -213,8 +212,7 @@ async def refresh_access_token(db: AsyncSession, refresh_token: str):
         "access_token": new_access_token, 
         "refresh_token": refresh_token,
         "token_type": "bearer",
-        "user": user,
-        "force_password_change": user.force_password_change
+        "user": user
     }
 
 async def logout_user(db: AsyncSession, user_id: str, ip_address: str = None, user_agent: str = None):
@@ -256,7 +254,6 @@ async def reset_password(db: AsyncSession, token: str, new_password: str, ip_add
         raise HTTPException(status_code=404, detail="User not found")
         
     user.password_hash = hash_password(new_password)
-    user.force_password_change = False # Clear flag after reset
     
     # Log action
     await audit_service.log_action(
@@ -294,7 +291,7 @@ async def verify_email(db: AsyncSession, token: str, ip_address: str = None, use
     return True
 
 async def change_user_password(db: AsyncSession, user_id: uuid.UUID, old_password: str, new_password: str, ip_address: str = None, user_agent: str = None):
-    """Service to change password, handles force_password_change flag"""
+    """Service to change password"""
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     
@@ -302,7 +299,6 @@ async def change_user_password(db: AsyncSession, user_id: uuid.UUID, old_passwor
         raise HTTPException(status_code=401, detail="Invalid current password")
         
     user.password_hash = hash_password(new_password)
-    user.force_password_change = False
     
     await audit_service.log_action(
         db, user.id, "PASSWORD_CHANGED",

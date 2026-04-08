@@ -8,7 +8,7 @@ import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { ShieldCheck, Plus, Trash2, Loader2, FileText } from "lucide-react"
 import { getInsurance, addInsurance, deleteInsurance, uploadInsuranceDoc } from "@/api/Patient.api"
 
-const API_BASE = "http://127.0.0.1:8002"
+const API_BASE = `http://${window.location.hostname}:8002`
 
 const Insurance = () => {
   const [records, setRecords] = useState([])
