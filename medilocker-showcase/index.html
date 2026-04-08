@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MediLocker Showcase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar glass-card">
+        <div>
+          <p class="eyebrow">MEDI LOCKER</p>
+          <h1>Your Health. Your Vault. Your Control.</h1>
+        </div>
+        <button id="sessionButton" class="button secondary">Sign out</button>
+      </header>
+
+      <main class="content-grid">
+        <section class="hero glass-card">
+          <div class="hero-copy">
+            <p class="eyebrow">Standalone Experience App</p>
+            <h2 class="gradient-text">Premium healthcare UI, connected to your existing backend.</h2>
+            <p class="hero-text">
+              This app lives outside the current <span class="mono">frontend</span> and
+              <span class="mono">backend</span> folders, while still authenticating against the same FastAPI API.
+            </p>
+            <div class="hero-actions">
+              <button id="healthButton" class="button primary">Check backend health</button>
+              <button id="profileButton" class="button secondary">Load my data</button>
+            </div>
+          </div>
+
+          <div class="hero-orb" aria-hidden="true">
+            <div class="orb-ring orb-ring-a"></div>
+            <div class="orb-ring orb-ring-b"></div>
+            <div class="orb-core"></div>
+          </div>
+        </section>
+
+        <section class="stack">
+          <article class="glass-card panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Connection</p>
+                <h3>Backend status</h3>
+              </div>
+              <span id="healthBadge" class="badge info">Idle</span>
+            </div>
+            <div class="detail-list">
+              <div>
+                <span>API root</span>
+                <strong id="apiBaseText" class="mono"></strong>
+              </div>
+              <div>
+                <span>Service health</span>
+                <strong id="healthText">Not checked yet</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="glass-card panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">Session</p>
+                <h3>Current user</h3>
+              </div>
+              <span id="roleBadge" class="badge muted">Signed out</span>
+            </div>
+            <div class="detail-list">
+              <div>
+                <span>Email</span>
+                <strong id="userEmail">No active session</strong>
+              </div>
+              <div>
+                <span>User id</span>
+                <strong id="userId" class="mono">-</strong>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section class="glass-card auth-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Authentication</p>
+              <h3>Login or create an account</h3>
+            </div>
+          </div>
+
+          <div class="tab-row" role="tablist" aria-label="Authentication mode">
+            <button id="loginTab" class="tab active" type="button">Login</button>
+            <button id="registerTab" class="tab" type="button">Register</button>
+          </div>
+
+          <form id="authForm" class="form-grid">
+            <label class="field">
+              <span>Email</span>
+              <input name="email" type="email" placeholder="care@medilocker.com" required />
+            </label>
+
+            <label class="field">
+              <span>Password</span>
+              <input name="password" type="password" placeholder="Enter password" required />
+            </label>
+
+            <div id="registerFields" class="register-fields hidden">
+              <label class="field">
+                <span>Full name</span>
+                <input name="full_name" type="text" placeholder="Enter full name" />
+              </label>
+
+              <label class="field">
+                <span>Phone</span>
+                <input name="phone" type="tel" placeholder="+91 98765 43210" />
+              </label>
+
+              <label class="field">
+                <span>Role</span>
+                <select name="role">
+                  <option value="patient">Patient</option>
+                  <option value="doctor">Doctor</option>
+                  <option value="hospital">Hospital</option>
+                </select>
+              </label>
+
+              <label class="field role-only doctor-only hidden">
+                <span>License number</span>
+                <input name="license_number" type="text" placeholder="DOC-2026-001" />
+              </label>
+
+              <label class="field role-only doctor-only hidden">
+                <span>Specialization</span>
+                <input name="specialization" type="text" placeholder="Cardiology" />
+              </label>
+
+              <label class="field role-only hospital-only hidden">
+                <span>Hospital name</span>
+                <input name="hospital_name" type="text" placeholder="MediLocker General" />
+              </label>
+
+              <label class="field role-only hospital-only hidden">
+                <span>Registration number</span>
+                <input name="registration_number" type="text" placeholder="HSP-7781" />
+              </label>
+            </div>
+
+            <button id="submitButton" class="button primary full" type="submit">Login</button>
+          </form>
+
+          <p id="formMessage" class="message">Use the backend already running on port 8000.</p>
+        </section>
+
+        <section class="glass-card dashboard-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">Role Snapshot</p>
+              <h3>Live backend data</h3>
+            </div>
+            <span id="dataBadge" class="badge muted">No data</span>
+          </div>
+          <div id="dataOutput" class="data-output">
+            Sign in and click <span class="mono">Load my data</span> to fetch role-specific information from the API.
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -18,7 +18,8 @@ const MainLayout = ({ children }) => {
         maxWidth: 1400, 
         margin: "0 auto",
         position: "relative",
-        zIndex: 1 
+        zIndex: 1,
+        pointerEvents: "auto",
       }}>
         {children}
       </div>
