@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from typing import List
 from uuid import UUID
 from datetime import datetime
 
-from app.api.deps import get_db, get_current_patient
+from app.api.deps import get_db, get_current_patient, get_current_doctor, get_current_hospital
 from app.models.user import User
-from app.models.profile import PatientProfile
+from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
 from app.models.clinical import Consent, ConsentStatus
-from app.schemas.clinical import ConsentRead, ConsentCreate, ConsentUpdate
+from app.schemas.clinical import ConsentRead, ConsentCreate, ConsentUpdate, ConsentRecipientRead
 
 router = APIRouter(prefix="/patient/consents", tags=["Consents"])
 
@@ -109,3 +110,45 @@ async def revoke_consent(
     consent.revoked_at = datetime.now()
     await db.commit()
     return None
+
+# --- GRANTEE / RECIPIENT ENDPOINTS ---
+
+@router.get("/doctor/received", response_model=List[ConsentRecipientRead])
+async def list_received_consents_doctor(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_doctor)
+):
+    """
+    List all consents granted to the current doctor.
+    """
+    result = await db.execute(
+        select(Consent)
+        .options(selectinload(Consent.patient))
+        .where(
+            Consent.grantee_user_id == current_user.id,
+            Consent.grantee_role == "doctor",
+            Consent.status == ConsentStatus.ACTIVE
+        )
+        .order_by(Consent.granted_at.desc())
+    )
+    return result.scalars().all()
+
+@router.get("/hospital/received", response_model=List[ConsentRecipientRead])
+async def list_received_consents_hospital(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_hospital)
+):
+    """
+    List all consents granted to the current hospital.
+    """
+    result = await db.execute(
+        select(Consent)
+        .options(selectinload(Consent.patient))
+        .where(
+            Consent.grantee_user_id == current_user.id,
+            Consent.grantee_role == "hospital",
+            Consent.status == ConsentStatus.ACTIVE
+        )
+        .order_by(Consent.granted_at.desc())
+    )
+    return result.scalars().all()

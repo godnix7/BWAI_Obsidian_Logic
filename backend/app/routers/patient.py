@@ -14,6 +14,24 @@ from app.schemas.patient import (
 
 router = APIRouter(prefix="/patient", tags=["Patient"])
 
+def serialize_patient_profile(profile: PatientProfile, user: User) -> dict:
+    return {
+        "id": profile.id,
+        "user_id": profile.user_id,
+        "full_name": profile.full_name,
+        "date_of_birth": profile.date_of_birth,
+        "gender": profile.gender,
+        "phone": user.phone,
+        "blood_group": profile.blood_group,
+        "address": profile.address,
+        "emergency_contact_name": profile.emergency_contact_name,
+        "emergency_contact_phone": profile.emergency_contact_phone,
+        "allergies": profile.allergies or [],
+        "chronic_conditions": profile.chronic_conditions or [],
+        "qr_code_url": profile.qr_code_url,
+        "created_at": getattr(profile, "created_at", None),
+    }
+
 @router.get("/profile", response_model=PatientProfileRead)
 async def get_patient_profile(
     db: AsyncSession = Depends(get_db),
@@ -32,7 +50,7 @@ async def get_patient_profile(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Patient profile not found. Please complete your profile."
         )
-    return profile
+    return serialize_patient_profile(profile, current_user)
 
 @router.put("/profile", response_model=ProfileUpdateResponse)
 async def update_patient_profile(
@@ -52,13 +70,16 @@ async def update_patient_profile(
         # Initial creation if not exists
         profile = PatientProfile(
             user_id=current_user.id,
-            **profile_data.model_dump(exclude_unset=True)
+            **profile_data.model_dump(exclude_unset=True, exclude={"phone"})
         )
         db.add(profile)
     else:
         # Update existing
-        for field, value in profile_data.model_dump(exclude_unset=True).items():
+        for field, value in profile_data.model_dump(exclude_unset=True, exclude={"phone"}).items():
             setattr(profile, field, value)
+
+    if profile_data.phone is not None:
+        current_user.phone = profile_data.phone
     
     await db.commit()
     await db.refresh(profile)
@@ -66,7 +87,7 @@ async def update_patient_profile(
     return {
         "success": True,
         "message": "Profile updated successfully",
-        "profile": profile
+        "profile": serialize_patient_profile(profile, current_user)
     }
 
 @router.get("/family", response_model=List[FamilyMemberRead])
@@ -119,6 +140,56 @@ async def add_family_member(
     await db.commit()
     await db.refresh(new_member)
     return new_member
+
+@router.put("/family/{member_id}", response_model=FamilyMemberRead)
+async def update_family_member(
+    member_id: UUID,
+    member_data: FamilyMemberCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    res = await db.execute(
+        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
+    )
+    patient_id = res.scalars().first()
+
+    result = await db.execute(
+        select(FamilyMember).where(FamilyMember.id == member_id, FamilyMember.patient_id == patient_id)
+    )
+    member = result.scalars().first()
+
+    if not member:
+        raise HTTPException(status_code=404, detail="Family member not found.")
+
+    for field, value in member_data.model_dump().items():
+        setattr(member, field, value)
+
+    await db.commit()
+    await db.refresh(member)
+    return member
+
+@router.delete("/family/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_family_member(
+    member_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    res = await db.execute(
+        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
+    )
+    patient_id = res.scalars().first()
+
+    result = await db.execute(
+        select(FamilyMember).where(FamilyMember.id == member_id, FamilyMember.patient_id == patient_id)
+    )
+    member = result.scalars().first()
+
+    if not member:
+        raise HTTPException(status_code=404, detail="Family member not found.")
+
+    await db.delete(member)
+    await db.commit()
+    return None
 
 @router.put("/family/{member_id}", response_model=FamilyMemberRead)
 async def update_family_member(

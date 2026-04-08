@@ -7,6 +7,7 @@ from uuid import UUID
 import json
 import qrcode
 import os
+from io import BytesIO
 
 from app.api.deps import get_db, get_current_patient
 from app.models.user import User
@@ -18,6 +19,7 @@ from app.schemas.emergency import (
 )
 from app.core.config import settings
 from app.core.encryption import encrypt_qr_token, decrypt_qr_token
+from app.services.storage_service import storage_service
 
 router = APIRouter(tags=["Emergency QR"])
 
@@ -103,11 +105,15 @@ async def regenerate_emergency_qr(
     
     # 3. Save Image
     filename = f"qr_{profile.id}.png"
-    filepath = os.path.join("static", "qrcodes", filename)
-    img.save(filepath)
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    profile.qr_code_url = storage_service.upload_bytes(
+        f"static/qrcodes/{filename}",
+        buffer.getvalue(),
+        "image/png",
+    )
     
     # 4. Update Profile
-    profile.qr_code_url = f"/static/qrcodes/{filename}"
     await db.commit()
     await db.refresh(profile)
     
