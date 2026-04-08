@@ -27,5 +27,16 @@ class UserResponse(BaseModel):
 
 class AuthResponse(BaseModel):
     access_token: str
+    refresh_token: str        # <--- ADDED THIS
     token_type: str = "Bearer"
     user: UserResponse
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
