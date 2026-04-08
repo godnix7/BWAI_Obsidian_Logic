@@ -15,6 +15,16 @@ const EmergencyQR = () => {
   const [showPreview, setShowPreview] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
 
+  const fieldLabels = {
+    show_name: "Full Name",
+    show_gender: "Gender",
+    show_dob: "Date of Birth",
+    show_blood_group: "Blood Group",
+    show_allergies: "Allergies",
+    show_emergency_contact: "Emergency Contact",
+    show_chronic_conditions: "Chronic Conditions"
+  }
+
   const qrRef = useRef(null)
   const resolveUrl = (url) => url?.startsWith("http") ? url : `${API_BASE}${url}`
 
@@ -145,8 +155,8 @@ const EmergencyQR = () => {
                 border: `1px solid ${val ? "var(--accent)" : "var(--border-subtle)"}`,
                 cursor: "pointer", transition: "all 0.2s"
                 }} onClick={() => handleToggle(key)}>
-                <span style={{ textTransform: "capitalize", fontWeight: 500, fontSize: 14 }}>
-                    {key.replace(/_/g, " ")}
+                <span style={{ fontWeight: 500, fontSize: 14 }}>
+                    {fieldLabels[key] || key.replace(/_/g, " ")}
                 </span>
                 <div style={{
                     width: 40, height: 22, borderRadius: 11, position: "relative",
@@ -170,6 +180,15 @@ const EmergencyQR = () => {
             🔍 What first responders will see:
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 16, fontSize: 14 }}>
+            {qrData?.config?.show_name && <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)" }}>
+              <label className="input-label">Patient Name</label><p style={{ fontWeight: 600 }}>{patient.full_name || "N/A"}</p></div>}
+
+            {qrData?.config?.show_gender && <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)" }}>
+              <label className="input-label">Gender</label><p style={{ fontWeight: 600, textTransform: "capitalize" }}>{patient.gender || "N/A"}</p></div>}
+
+            {qrData?.config?.show_dob && <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)" }}>
+              <label className="input-label">Date of Birth</label><p style={{ fontWeight: 600 }}>{patient.date_of_birth || "N/A"}</p></div>}
+
             {qrData?.config?.show_blood_group && <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)" }}>
               <label className="input-label">Blood Group</label><p style={{ fontWeight: 600, color: "var(--error)" }}>{patient.blood_group || "Unknown"}</p></div>}
             

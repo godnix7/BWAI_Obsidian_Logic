@@ -9,10 +9,15 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.core.config import settings
 from app.core.redis import redis_client
 
-# nischay | user registration base
+# nischay | user registration base with improved error handling
 async def register_user(db: AsyncSession, data) -> User:
+    from sqlalchemy.exc import IntegrityError
+    from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
+    from app.models.user import UserRole
+    from datetime import date as py_date
+
     try:
-        # Check if user already exists
+        # 1. Check if user already exists (Email)
         result = await db.execute(select(User).where(User.email == data.email))
         if result.scalars().first():
             raise HTTPException(
@@ -20,7 +25,7 @@ async def register_user(db: AsyncSession, data) -> User:
                 detail="Email is already registered"
             )
         
-        # Create the user
+        # 2. Create the user
         new_user = User(
             email=data.email,
             password_hash=hash_password(data.password),
@@ -30,66 +35,61 @@ async def register_user(db: AsyncSession, data) -> User:
         )
         
         db.add(new_user)
+        # Flush to check for immediate integrity errors (like Phone uniqueness)
+        await db.flush()
+
+        # 3. Initialize Role-Specific Profile
+        if data.role == UserRole.PATIENT:
+            p_profile = PatientProfile(
+                user_id=new_user.id,
+                full_name=getattr(data, 'full_name', 'Patient User'),
+                date_of_birth=py_date(1990, 1, 1),
+                gender="Other"
+            )
+            db.add(p_profile)
+        elif data.role == UserRole.DOCTOR:
+            d_profile = DoctorProfile(
+                user_id=new_user.id,
+                full_name=getattr(data, 'full_name', 'Doctor User'),
+                specialization=getattr(data, 'specialization', 'General'),
+                license_number=getattr(data, 'license_number', f"PENDING-{uuid.uuid4().hex[:8]}"),
+                years_experience=0,
+                consultation_fee=0
+            )
+            db.add(d_profile)
+        elif data.role == UserRole.HOSPITAL:
+            h_profile = HospitalProfile(
+                user_id=new_user.id,
+                hospital_name=getattr(data, 'hospital_name', 'New Hospital'),
+                registration_number=getattr(data, 'registration_number', f"HOSP-{uuid.uuid4().hex[:8]}"),
+                address="Pending Update",
+                city="Pending",
+                state="Pending",
+                phone=data.phone or "Pending",
+                email=data.email,
+                type="Clinic"
+            )
+            db.add(h_profile)
+            
         await db.commit()
+        await db.refresh(new_user)
+        return new_user
+
+    except IntegrityError as e:
+        await db.rollback()
+        detail = "Registration failed."
+        if "users_phone_key" in str(e):
+            detail = "Phone number is already registered."
+        elif "users_email_key" in str(e):
+            detail = "Email is already registered."
+        raise HTTPException(status_code=400, detail=detail)
     except Exception as e:
+        await db.rollback()
         print("CATASTROPHIC REGISTRATION ERROR:")
         traceback.print_exc()
-        raise e
-    
-    await db.refresh(new_user)
-
-    # Initialize Role-Specific Profile
-    from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
-    from app.models.user import UserRole
-    from datetime import date as py_date
-    
-    print(f"DEBUG: Starting profile init for {new_user.role} (ID: {new_user.id})")
-    if new_user.role == UserRole.PATIENT:
-        p_profile = PatientProfile(
-            user_id=new_user.id,
-            full_name=getattr(data, 'full_name', 'Patient User'),
-            date_of_birth=py_date(1990, 1, 1),
-            gender="Other"
-        )
-        new_user.patient_profile = p_profile
-    elif new_user.role == UserRole.DOCTOR:
-        d_profile = DoctorProfile(
-            user_id=new_user.id,
-            full_name=getattr(data, 'full_name', 'Doctor User'),
-            specialization=getattr(data, 'specialization', 'General'),
-            license_number=getattr(data, 'license_number', f"PENDING-{uuid.uuid4().hex[:8]}"),
-            years_experience=0,
-            consultation_fee=0
-        )
-        new_user.doctor_profile = d_profile
-    elif new_user.role == UserRole.HOSPITAL:
-        h_profile = HospitalProfile(
-            user_id=new_user.id,
-            hospital_name=getattr(data, 'hospital_name', 'New Hospital'),
-            registration_number=getattr(data, 'registration_number', f"HOSP-{uuid.uuid4().hex[:8]}"),
-            address="Pending Update",
-            city="Pending",
-            state="Pending",
-            phone=data.phone or "Pending",
-            email=data.email,
-            type="Clinic"
-        )
-        new_user.hospital_profile = h_profile
-        
-    await db.commit()
-    print(f"DEBUG: Profile successfully committed for USER_ID={new_user.id}")
-        # We continue even if profile fails so user can at least login and update later
-        # However, for features to work, they really need this profile.
-    
-    # Mock Email Verification
-    email_token = str(uuid.uuid4())
-    if redis_client:
-        try:
-            await redis_client.setex(f"email_verify:{email_token}", 86400, new_user.email)
-        except Exception as e:
-            print(f"Warning: Redis offline, skipping email verification cache ({e})")
-    
-    return new_user
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail=str(e))
 
 # antigravity | unified login logic with tokens
 async def login_user(db: AsyncSession, email: str, password: str):

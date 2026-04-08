@@ -6,7 +6,7 @@ import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
 import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { Shield, Plus, ShieldOff, Search, Loader2 } from "lucide-react"
-import { getConsents, grantConsent, revokeConsent, getAvailableDoctors } from "@/api/Patient.api"
+import { getConsents, grantConsent, revokeConsent, getAvailableDoctors, getAvailableHospitals } from "@/api/Patient.api"
 
 const Consents = () => {
   const [consents, setConsents] = useState([])
@@ -16,7 +16,9 @@ const Consents = () => {
   
   // Search state
   const [doctors, setDoctors] = useState([])
+  const [hospitals, setHospitals] = useState([])
   const [search, setSearch] = useState("")
+  const [searchType, setSearchType] = useState("doctor") // "doctor" or "hospital"
   const [submitting, setSubmitting] = useState(false)
 
   // Form State
@@ -34,12 +36,14 @@ const Consents = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const [consentsRes, docsRes] = await Promise.all([
+      const [consentsRes, docsRes, hospsRes] = await Promise.all([
           getConsents(),
-          getAvailableDoctors()
+          getAvailableDoctors(),
+          getAvailableHospitals()
       ])
       setConsents(consentsRes.data)
       setDoctors(docsRes.data)
+      setHospitals(hospsRes.data)
       setError(null)
     } catch (err) {
       console.error("Failed to fetch consents:", err)
@@ -76,7 +80,7 @@ const Consents = () => {
       setSubmitting(true)
       const payload = {
           grantee_user_id: selectedGrantee.user_id,
-          grantee_role: "doctor", // For now, we only show doctors in the search
+          grantee_role: searchType, 
           access_level: accessLevel,
           record_types_allowed: recordTypes,
           expires_at: expiryDate || null
@@ -92,10 +96,9 @@ const Consents = () => {
     }
   }
 
-  const filteredDoctors = doctors.filter(d => 
-    d.full_name.toLowerCase().includes(search.toLowerCase()) || 
-    d.specialization.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredProviders = searchType === "doctor" ? 
+    doctors.filter(d => d.full_name.toLowerCase().includes(search.toLowerCase()) || d.specialization.toLowerCase().includes(search.toLowerCase())) :
+    hospitals.filter(h => h.hospital_name.toLowerCase().includes(search.toLowerCase()) || h.city.toLowerCase().includes(search.toLowerCase()))
 
   const ConsentCard = ({ consent }) => (
     <div className="glass-card card" style={{ padding: 20 }}>
@@ -171,23 +174,27 @@ const Consents = () => {
       {grantOpen && (
         <Modal title="Grant Access" onClose={() => setGrantOpen(false)}>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div><label className="input-label">Search Doctor or Hospital</label>
-              <div style={{ position: "relative" }}>
-                <Search size={16} style={{ position: "absolute", left: 12, top: 12, color: "var(--text-muted)" }} />
-                <input className="input" placeholder="Search by name..." style={{ paddingLeft: 36 }} value={search} onChange={e => setSearch(e.target.value)} />
-              </div>
+            <div className="tab-bar" style={{ marginBottom: 8, height: 36 }}>
+                {["doctor", "hospital"].map(t => (
+                    <button key={t} className={`tab-item ${searchType === t ? "active" : ""}`}
+                            onClick={() => { setSearchType(t); setSelectedGrantee(null); }}
+                            style={{ flex: 1, textTransform: "capitalize", fontSize: 13 }}>
+                        {t}s
+                    </button>
+                ))}
             </div>
+
             <div style={{ display: "grid", gap: 8, maxHeight: 150, overflowY: "auto", padding: 4 }}>
-              {filteredDoctors.length === 0 ? <p style={{ fontSize: 12, textAlign: "center", color: "var(--text-muted)" }}>No providers found</p> : 
-               filteredDoctors.map(d => (
-                <label key={d.id} style={{ 
+              {filteredProviders.length === 0 ? <p style={{ fontSize: 12, textAlign: "center", color: "var(--text-muted)", marginTop: 12 }}>No {searchType}s found</p> : 
+               filteredProviders.map(p => (
+                <label key={p.id} style={{ 
                     display: "flex", alignItems: "center", gap: 10, padding: 12, borderRadius: 10, 
-                    border: selectedGrantee?.id === d.id ? "2px solid var(--accent)" : "1px solid var(--border-default)", 
-                    cursor: "pointer", background: selectedGrantee?.id === d.id ? "var(--glass-light)" : "transparent"
+                    border: selectedGrantee?.id === p.id ? "2px solid var(--accent)" : "1px solid var(--border-default)", 
+                    cursor: "pointer", background: selectedGrantee?.id === p.id ? "var(--glass-light)" : "transparent"
                 }}>
-                  <input type="radio" name="grantee" checked={selectedGrantee?.id === d.id} onChange={() => setSelectedGrantee(d)} />
-                  <div><p style={{ fontWeight: 500, fontSize: 14 }}>{d.full_name}</p>
-                    <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>{d.specialization}</p></div>
+                  <input type="radio" name="grantee" checked={selectedGrantee?.id === p.id} onChange={() => setSelectedGrantee(p)} />
+                  <div><p style={{ fontWeight: 500, fontSize: 14 }}>{p.full_name || p.hospital_name}</p>
+                    <p style={{ fontSize: 12, color: "var(--text-secondary)" }}>{p.specialization || p.type}</p></div>
                 </label>
               ))}
             </div>

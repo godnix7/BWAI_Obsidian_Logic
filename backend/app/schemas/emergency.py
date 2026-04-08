@@ -6,6 +6,9 @@ from uuid import UUID
 
 class EmergencyQRConfigUpdate(BaseModel):
     # This config tells which fields to include in the public QR payload
+    show_name: bool = True
+    show_gender: bool = True
+    show_dob: bool = True
     show_blood_group: bool = True
     show_allergies: bool = True
     show_emergency_contact: bool = True

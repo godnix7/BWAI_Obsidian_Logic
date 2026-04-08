@@ -40,15 +40,25 @@ async def get_emergency_qr_config(
         raise HTTPException(status_code=404, detail="Profile not found.")
 
     # Load config from qr_secret_key (JSON string)
-    config_dict = {
+    # Default everything to True
+    defaults = {
+        "show_name": True,
+        "show_gender": True,
+        "show_dob": True,
         "show_blood_group": True,
         "show_allergies": True,
         "show_emergency_contact": True,
         "show_chronic_conditions": True
     }
+    
+    config_dict = { **defaults }
     if profile.qr_secret_key:
         try:
-            config_dict.update(json.loads(profile.qr_secret_key))
+            stored_config = json.loads(profile.qr_secret_key)
+            # Update only with keys that exist in defaults to avoid pollution
+            for k, v in stored_config.items():
+                if k in defaults:
+                    config_dict[k] = v
         except:
             pass
 
@@ -118,21 +128,24 @@ async def regenerate_emergency_qr(
     await db.refresh(profile)
     
     # Get current config
-    config_dict = {}
+    config_dict = {
+        "show_name": True,
+        "show_gender": True,
+        "show_dob": True,
+        "show_blood_group": True,
+        "show_allergies": True,
+        "show_emergency_contact": True,
+        "show_chronic_conditions": True
+    }
     if profile.qr_secret_key:
         try:
-            config_dict = json.loads(profile.qr_secret_key)
+            config_dict.update(json.loads(profile.qr_secret_key))
         except:
             pass
             
     return {
         "qr_code_url": profile.qr_code_url,
-        "config": config_dict or {
-            "show_blood_group": True,
-            "show_allergies": True,
-            "show_emergency_contact": True,
-            "show_chronic_conditions": True
-        }
+        "config": config_dict
     }
 
 @router.get("/emergency/{qr_token}", response_model=EmergencyProfileRead)
@@ -164,6 +177,9 @@ async def public_emergency_access(
 
     # 3. Load Visibility Config
     config = {
+        "show_name": True,
+        "show_gender": True,
+        "show_dob": True,
         "show_blood_group": True,
         "show_allergies": True,
         "show_emergency_contact": True,
@@ -185,10 +201,18 @@ async def public_emergency_access(
     records = rec_result.scalars().all()
 
     # 5. Build filtered response
-    response = {
-        "patient_name": profile.full_name,
-        "gender": profile.gender
-    }
+    response = {}
+    
+    if config.get("show_name"):
+        response["patient_name"] = profile.full_name
+    else:
+        response["patient_name"] = "Emergency Patient"
+        
+    if config.get("show_gender"):
+        response["gender"] = profile.gender
+        
+    if config.get("show_dob"):
+        response["date_of_birth"] = profile.date_of_birth
     
     if config.get("show_blood_group"):
         response["blood_group"] = profile.blood_group

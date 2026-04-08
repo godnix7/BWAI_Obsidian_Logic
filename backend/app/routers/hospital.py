@@ -34,6 +34,27 @@ async def get_hospital_profile(
         raise HTTPException(status_code=404, detail="Hospital profile not found.")
     return profile
 
+@router.get("/public", response_model=List[dict])
+async def list_available_hospitals(
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    List all hospitals for patients to grant consent.
+    """
+    result = await db.execute(select(HospitalProfile))
+    hospitals = result.scalars().all()
+    
+    return [
+        {
+            "id": h.id,
+            "user_id": h.user_id,
+            "hospital_name": h.hospital_name,
+            "type": h.type,
+            "address": h.address,
+            "city": h.city
+        } for h in hospitals
+    ]
+
 @router.put("/profile")
 async def update_hospital_profile(
     data: dict,
