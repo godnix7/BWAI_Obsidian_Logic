@@ -3,6 +3,7 @@ from sqlalchemy.orm import declarative_base
 from app.core.config import settings
 from app.db.base_class import Base
 
+# antigravity | unified async engine configuration
 # Create async SQLAlchemy engine
 engine = create_async_engine(
     settings.DATABASE_URL, 
@@ -10,6 +11,7 @@ engine = create_async_engine(
     future=True
 )
 
+# antigravity | unified session maker
 # Async session maker
 AsyncSessionLocal = async_sessionmaker(
     engine, 
@@ -17,8 +19,7 @@ AsyncSessionLocal = async_sessionmaker(
     expire_on_commit=False
 )
 
-from app.db.base_class import Base
-
+# nischay | db dependency
 # Dependency for FastAPI routes
 async def get_db():
     async with AsyncSessionLocal() as session:

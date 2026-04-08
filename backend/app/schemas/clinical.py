@@ -29,6 +29,11 @@ class AppointmentCreate(BaseModel):
     reason: Optional[str] = None
     type: AppointmentType
 
+class PatientShort(BaseModel):
+    full_name: str
+    gender: str
+    blood_group: Optional[str] = None
+
 class AppointmentRead(BaseModel):
     id: UUID
     patient_id: UUID
@@ -39,9 +44,17 @@ class AppointmentRead(BaseModel):
     status: AppointmentStatus
     type: AppointmentType
     reason: Optional[str] = None
+    notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
     created_at: datetime
+    patient: Optional[PatientShort] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+class AppointmentStatusUpdate(BaseModel):
+    status: AppointmentStatus
+    notes: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
 # --- Consent Enums ---
 

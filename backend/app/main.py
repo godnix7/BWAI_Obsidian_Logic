@@ -7,13 +7,14 @@ from app.routers import (
     doctor, hospital
 )
 
+# nischay | project structure & base routers
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="Role-Based Healthcare Management Platform Backend - Integrated Patient & Auth Services",
     version=settings.VERSION,
 )
 
-# CORS setup
+# antigravity | cors configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -30,9 +31,7 @@ async def root():
 async def health_check():
     return {"status": "healthy", "version": settings.VERSION}
 
-# Include routers
-# Auth usually doesn't have the version prefix in some designs, 
-# but I'll prefix everything to be consistent with the system design
+# antigravity | unified router registration
 # We prefix all routes with /api/v1 for consistency 
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(patient.router, prefix=settings.API_V1_STR)

@@ -1,35 +1,35 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuthStore } from "@/store/authStore"
-import { mockUsers } from "@/data/mockData"
-import { LogIn } from "lucide-react"
+import { loginApi } from "@/api/auth.api"
+import { LogIn, Loader2 } from "lucide-react"
 
 const Login = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
     setError("")
+    setLoading(true)
 
-    // Mock login — match by email
-    const user = Object.values(mockUsers).find(u => u.email === email)
-    if (user && password.length >= 6) {
-      setAuth({ user, access_token: "mock-jwt-token-" + user.role })
-      navigate(`/${user.role}`)
-    } else {
-      setError("Invalid credentials. Try: aarav@email.com / vikram@email.com / admin@apollomedicare.in")
+    try {
+      const res = await loginApi(email, password)
+      setAuth(res.data)
+      navigate(`/${res.data.user.role}`)
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError("Network error. Could not connect to the server.")
+      }
+    } finally {
+      setLoading(false)
     }
-  }
-
-  // Quick login buttons for demo
-  const quickLogin = (role) => {
-    const user = mockUsers[role]
-    setAuth({ user, access_token: "mock-jwt-token-" + role })
-    navigate(`/${role}`)
   }
 
   return (
@@ -65,21 +65,11 @@ const Login = () => {
 
           {error && <p style={{ color: "var(--error)", fontSize: 13, marginBottom: 16 }}>{error}</p>}
 
-          <button type="submit" className="btn-primary" style={{ width: "100%", justifyContent: "center" }}>
-            <LogIn size={16} /> Sign In
+          <button type="submit" className="btn-primary" style={{ width: "100%", justifyContent: "center" }} disabled={loading}>
+            {loading ? <Loader2 className="animate-spin" size={16} /> : <LogIn size={16} />} 
+            {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-
-        <div className="divider" />
-
-        <p style={{ color: "var(--text-muted)", fontSize: 12, textAlign: "center", marginBottom: 12 }}>
-          QUICK DEMO LOGIN
-        </p>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => quickLogin("patient")} className="btn-secondary" style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "8px 12px" }}>Patient</button>
-          <button onClick={() => quickLogin("doctor")} className="btn-secondary" style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "8px 12px" }}>Doctor</button>
-          <button onClick={() => quickLogin("hospital")} className="btn-secondary" style={{ flex: 1, justifyContent: "center", fontSize: 12, padding: "8px 12px" }}>Hospital</button>
-        </div>
 
         <p style={{ color: "var(--text-secondary)", fontSize: 13, textAlign: "center", marginTop: 24 }}>
           Don't have an account?{" "}
