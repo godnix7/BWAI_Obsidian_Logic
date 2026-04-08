@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_PRIVATE_KEY_PATH: str = "./keys/private.pem"
     JWT_PUBLIC_KEY_PATH: str = "./keys/public.pem"
+    SECRET_KEY: str = "super-secret-hackathon-key" # Fallback if keys are not used
+
+    # Patient / QR settings 
+    QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
 
     # Patient / QR settings 
     QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"

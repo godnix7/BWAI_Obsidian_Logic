@@ -33,6 +33,7 @@ async def health_check():
 # Include routers
 # Auth usually doesn't have the version prefix in some designs, 
 # but I'll prefix everything to be consistent with the system design
+# We prefix all routes with /api/v1 for consistency 
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(patient.router, prefix=settings.API_V1_STR)
 app.include_router(medical_records.router, prefix=settings.API_V1_STR)

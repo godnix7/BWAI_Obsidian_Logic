@@ -440,3 +440,10 @@ async def create_prescription(
         .where(Prescription.id == new_prescription.id)
     )
     return result.scalars().first()
+from fastapi import APIRouter
+
+router = APIRouter(prefix="/doctor", tags=["Doctor"])
+
+@router.get("/profile")
+async def get_doctor_profile():
+    return {"message": "Doctor profile - Work in progress"}
