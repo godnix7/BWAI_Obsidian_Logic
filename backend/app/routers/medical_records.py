@@ -4,6 +4,8 @@ from sqlalchemy.future import select
 from typing import List, Optional
 from uuid import uuid4, UUID
 from datetime import date
+import shutil
+import os
 
 from app.api.deps import get_db, get_current_patient
 from app.models.user import User
@@ -57,10 +59,24 @@ async def upload_medical_record(
     if not patient_id:
         raise HTTPException(status_code=400, detail="Patient profile not found.")
 
-    # In a real scenario, we'd upload 'file' to S3 here
-    # For now, we stub the URL and metadata
+    # 1. Generate unique ID for the file
     file_id = str(uuid4())
-    stub_file_url = f"https://s3.mock.medilocker.com/patients/{patient_id}/records/{file_id}/{file.filename}"
+    _, ext = os.path.splitext(file.filename)
+    unique_filename = f"rec_{file_id}{ext}"
+    
+    # 2. Save physical file to static/records/
+    storage_path = os.path.join("static", "records", unique_filename)
+    try:
+        with open(storage_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Could not save file: {str(e)}")
+    
+    # 3. Get file size
+    file_size = os.path.getsize(storage_path)
+    
+    # 4. Save to Database
+    file_url = f"/static/records/{unique_filename}"
     
     new_record = MedicalRecord(
         patient_id=patient_id,
@@ -68,9 +84,9 @@ async def upload_medical_record(
         record_type=record_type,
         title=title,
         description=description,
-        file_url=stub_file_url,
+        file_url=file_url,
         file_name=file.filename,
-        file_size_bytes=1024, # Mocked size
+        file_size_bytes=file_size,
         file_mime_type=file.content_type or "application/octet-stream",
         is_encrypted=True,
         is_emergency_visible=is_emergency_visible,
