@@ -23,6 +23,8 @@ import DoctorPatients from "@/pages/doctor/Patients"
 import DoctorPrescriptions from "@/pages/doctor/Prescriptions"
 import DoctorSchedule from "@/pages/doctor/Schedule"
 import DoctorProfile from "@/pages/doctor/Profile"
+import MediLockerPage from "@/pages/MediLockerPage"
+import LearnMore from "@/pages/LearnMore"
 
 // Hospital
 import HospitalDashboard from "@/pages/hospital/Dashboard"
@@ -45,6 +47,8 @@ export default function App() {
   return (
     <Routes>
       {/* Public */}
+      <Route path="/" element={<MediLockerPage />} />
+      <Route path="/learn-more" element={<LearnMore />} />
       <Route path="/login" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to={`/${user.role}`} /> : <Register />} />
 
@@ -76,7 +80,7 @@ export default function App() {
       <Route path="/hospital/profile" element={<ProtectedRoute allowedRole="hospital"><HospitalProfile /></ProtectedRoute>} />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to={user ? `/${user.role}` : "/login"} />} />
+      <Route path="*" element={<Navigate to={user ? `/${user.role}` : "/"} />} />
     </Routes>
   )
 }
