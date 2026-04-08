@@ -7,15 +7,19 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database
+    # Defaulting to PostgreSQL + asyncpg (standard for this project)
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/medilocker"
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    # Auth
+    # Auth (RS256 Private/Public Key structure)
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_PRIVATE_KEY_PATH: str = "./keys/private.pem"
     JWT_PUBLIC_KEY_PATH: str = "./keys/public.pem"
     SECRET_KEY: str = "super-secret-hackathon-key" # Fallback if keys are not used
+
+    # Patient / QR settings 
+    QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
 
     # Patient / QR settings 
     QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
