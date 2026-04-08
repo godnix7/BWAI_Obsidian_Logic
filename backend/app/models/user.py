@@ -4,12 +4,14 @@ from datetime import datetime
 from sqlalchemy import Column, String, Boolean, DateTime, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.core.database import Base
+from app.db.base_class import Base
 
 class UserRole(str, enum.Enum):
-    patient = "patient"
-    doctor = "doctor"
-    hospital = "hospital"
+    PATIENT = "patient"
+    DOCTOR = "doctor"
+    HOSPITAL = "hospital"
+
+enum_values = lambda enum_cls: [member.value for member in enum_cls]
 
 class User(Base):
     __tablename__ = "users"
@@ -18,7 +20,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     phone = Column(String(20), unique=True, nullable=True)
     password_hash = Column(String(255), nullable=False)
-    role = Column(Enum(UserRole), nullable=False)
+    role = Column(Enum(UserRole, values_callable=enum_values), nullable=False)
     
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)

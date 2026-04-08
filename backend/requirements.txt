@@ -14,3 +14,4 @@ pillow
 cryptography
 httpx
 email-validator
+boto3

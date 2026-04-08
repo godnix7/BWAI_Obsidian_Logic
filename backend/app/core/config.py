@@ -23,6 +23,17 @@ class Settings(BaseSettings):
     # nischay | patient security
     # Patient / QR settings 
     QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
+    BASE_URL: str = "http://localhost:8002"  # For generating absolute QR URLs
+
+    # File storage
+    FILE_STORAGE_BACKEND: str = "local"  # local | s3
+    S3_BUCKET_NAME: str = "medilocker-records"
+    S3_ACCESS_KEY_ID: Optional[str] = None
+    S3_SECRET_ACCESS_KEY: Optional[str] = None
+    S3_REGION: str = "us-east-1"
+    S3_ENDPOINT_URL: Optional[str] = None
+    S3_PUBLIC_BASE_URL: Optional[str] = None
+    S3_USE_SSL: bool = True
 
     # nischay | cors settings
     # CORS

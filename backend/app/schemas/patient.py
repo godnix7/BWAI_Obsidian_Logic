@@ -27,6 +27,7 @@ class PatientProfileBase(BaseModel):
     full_name: str
     date_of_birth: date
     gender: str
+    phone: Optional[str] = None
     blood_group: Optional[str] = None
     address: Optional[str] = None
     emergency_contact_name: Optional[str] = None
@@ -38,6 +39,7 @@ class PatientProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     date_of_birth: Optional[date] = None
     gender: Optional[str] = None
+    phone: Optional[str] = None
     blood_group: Optional[str] = None
     address: Optional[str] = None
     emergency_contact_name: Optional[str] = None

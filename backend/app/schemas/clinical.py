@@ -3,6 +3,7 @@ from datetime import date, time, datetime
 from typing import List, Optional
 from uuid import UUID
 from enum import Enum
+from app.schemas.patient import PatientProfileRead
 
 # --- Appointment Enums ---
 
@@ -30,9 +31,15 @@ class AppointmentCreate(BaseModel):
     type: AppointmentType
 
 class PatientShort(BaseModel):
+    id: UUID
     full_name: str
     gender: str
     blood_group: Optional[str] = None
+
+class DoctorShort(BaseModel):
+    id: UUID
+    full_name: Optional[str] = None
+    specialization: Optional[str] = None
 
 class AppointmentRead(BaseModel):
     id: UUID
@@ -48,6 +55,7 @@ class AppointmentRead(BaseModel):
     rejection_reason: Optional[str] = None
     created_at: datetime
     patient: Optional[PatientShort] = None
+    doctor: Optional[DoctorShort] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -93,5 +101,10 @@ class ConsentRead(BaseModel):
     granted_at: datetime
     expires_at: Optional[datetime] = None
     revoked_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ConsentRecipientRead(ConsentRead):
+    patient: Optional[PatientProfileRead] = None
 
     model_config = ConfigDict(from_attributes=True)

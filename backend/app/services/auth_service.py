@@ -37,6 +37,49 @@ async def register_user(db: AsyncSession, data) -> User:
         raise e
     
     await db.refresh(new_user)
+
+    # Initialize Role-Specific Profile
+    from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
+    from app.models.user import UserRole
+    from datetime import date as py_date
+    
+    print(f"DEBUG: Starting profile init for {new_user.role} (ID: {new_user.id})")
+    if new_user.role == UserRole.PATIENT:
+        p_profile = PatientProfile(
+            user_id=new_user.id,
+            full_name=getattr(data, 'full_name', 'Patient User'),
+            date_of_birth=py_date(1990, 1, 1),
+            gender="Other"
+        )
+        new_user.patient_profile = p_profile
+    elif new_user.role == UserRole.DOCTOR:
+        d_profile = DoctorProfile(
+            user_id=new_user.id,
+            full_name=getattr(data, 'full_name', 'Doctor User'),
+            specialization=getattr(data, 'specialization', 'General'),
+            license_number=getattr(data, 'license_number', f"PENDING-{uuid.uuid4().hex[:8]}"),
+            years_experience=0,
+            consultation_fee=0
+        )
+        new_user.doctor_profile = d_profile
+    elif new_user.role == UserRole.HOSPITAL:
+        h_profile = HospitalProfile(
+            user_id=new_user.id,
+            hospital_name=getattr(data, 'hospital_name', 'New Hospital'),
+            registration_number=getattr(data, 'registration_number', f"HOSP-{uuid.uuid4().hex[:8]}"),
+            address="Pending Update",
+            city="Pending",
+            state="Pending",
+            phone=data.phone or "Pending",
+            email=data.email,
+            type="Clinic"
+        )
+        new_user.hospital_profile = h_profile
+        
+    await db.commit()
+    print(f"DEBUG: Profile successfully committed for USER_ID={new_user.id}")
+        # We continue even if profile fails so user can at least login and update later
+        # However, for features to work, they really need this profile.
     
     # Mock Email Verification
     email_token = str(uuid.uuid4())
@@ -50,6 +93,8 @@ async def register_user(db: AsyncSession, data) -> User:
 
 # antigravity | unified login logic with tokens
 async def login_user(db: AsyncSession, email: str, password: str):
+    from app.models.user import UserRole
+
     # 1. Find user by email
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
@@ -67,7 +112,32 @@ async def login_user(db: AsyncSession, email: str, password: str):
             detail="User account is inactive"
         )
         
-    # 3. Generate tokens
+    # 3. Handle Lazy Profile Initialization (Fail-safe for broken registrations)
+    from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
+    from datetime import date
+    
+    profile_found = False
+    if user.role == UserRole.PATIENT:
+        res = await db.execute(select(PatientProfile).where(PatientProfile.user_id == user.id))
+        if res.scalars().first(): profile_found = True
+        else:
+            user.patient_profile = PatientProfile(user_id=user.id, full_name="Unknown Patient", date_of_birth=date(1990,1,1), gender="Other")
+    elif user.role == UserRole.DOCTOR:
+        res = await db.execute(select(DoctorProfile).where(DoctorProfile.user_id == user.id))
+        if res.scalars().first(): profile_found = True
+        else:
+            user.doctor_profile = DoctorProfile(user_id=user.id, full_name="Unknown Doctor", specialization="General", license_number=f"AUTO-{uuid.uuid4().hex[:6]}", years_experience=0, consultation_fee=0)
+    elif user.role == UserRole.HOSPITAL:
+        res = await db.execute(select(HospitalProfile).where(HospitalProfile.user_id == user.id))
+        if res.scalars().first(): profile_found = True
+        else:
+            user.hospital_profile = HospitalProfile(user_id=user.id, hospital_name="Unknown Hospital", registration_number=f"AUTO-{uuid.uuid4().hex[:6]}", address="Unknown", city="Unknown", state="Unknown", phone="Unknown", email=user.email, type="Clinic")
+    
+    if not profile_found:
+        await db.commit()
+        await db.refresh(user)
+
+    # 4. Generate tokens
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     

@@ -45,7 +45,15 @@ class MedicalRecordRead(MedicalRecordBase):
 
 # --- Prescription Schemas ---
 
+class PrescriptionMedicationCreate(BaseModel):
+    medication_name: str
+    dosage: Optional[str] = None
+    frequency: Optional[str] = None
+    duration: Optional[str] = None
+    instructions: Optional[str] = None
+
 class PrescriptionMedicationRead(BaseModel):
+
     medication_name: str
     dosage: Optional[str] = None
     frequency: Optional[str] = None
@@ -54,7 +62,16 @@ class PrescriptionMedicationRead(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+class PrescriptionCreate(BaseModel):
+    patient_id: UUID
+    appointment_id: Optional[UUID] = None
+    diagnosis: str
+    notes: Optional[str] = None
+    valid_until: Optional[date] = None
+    medications: List[PrescriptionMedicationCreate]
+
 class PrescriptionRead(BaseModel):
+
     id: UUID
     patient_id: UUID
     doctor_id: UUID

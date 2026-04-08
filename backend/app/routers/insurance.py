@@ -1,14 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-from uuid import UUID
+from uuid import UUID, uuid4
+import os
 
 from app.api.deps import get_db, get_current_patient
 from app.models.user import User
 from app.models.profile import PatientProfile
 from app.models.finance import InsuranceRecord
 from app.schemas.insurance import InsuranceRead, InsuranceCreate, InsuranceUpdate
+from app.services.storage_service import storage_service
 
 router = APIRouter(prefix="/patient/insurance", tags=["Insurance"])
 
@@ -105,6 +107,47 @@ async def delete_insurance(
     await db.delete(ins)
     await db.commit()
     return None
+
+@router.post("/{id}/upload", response_model=InsuranceRead)
+async def upload_insurance_document(
+    id: UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    Upload a policy document for an insurance record.
+    """
+    result = await db.execute(
+        select(InsuranceRecord).where(InsuranceRecord.id == id)
+    )
+    ins = result.scalars().first()
+    
+    if not ins:
+        raise HTTPException(status_code=404, detail="Insurance record not found.")
+
+    file_id = str(uuid4())
+    _, ext = os.path.splitext(file.filename)
+    unique_filename = f"ins_{file_id}{ext}"
+
+    storage_key = f"static/records/{unique_filename}"
+    try:
+        content = await file.read()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Could not read document: {str(e)}")
+
+    if not content:
+        raise HTTPException(status_code=400, detail="Uploaded document is empty.")
+
+    ins.document_url = storage_service.upload_bytes(
+        storage_key,
+        content,
+        file.content_type or "application/octet-stream",
+    )
+    
+    await db.commit()
+    await db.refresh(ins)
+    return ins
 
 @router.get("/{id}/document")
 async def get_insurance_document_url(

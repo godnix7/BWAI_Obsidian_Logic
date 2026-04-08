@@ -5,6 +5,9 @@ from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from uuid import UUID
 import json
+import qrcode
+import os
+from io import BytesIO
 
 from app.api.deps import get_db, get_current_patient
 from app.models.user import User
@@ -14,6 +17,9 @@ from app.schemas.emergency import (
     EmergencyQRRead, EmergencyQRConfigUpdate, 
     EmergencyProfileRead, EmergencyContactRead, EmergencyRecordRead
 )
+from app.core.config import settings
+from app.core.encryption import encrypt_qr_token, decrypt_qr_token
+from app.services.storage_service import storage_service
 
 router = APIRouter(tags=["Emergency QR"])
 
@@ -33,14 +39,22 @@ async def get_emergency_qr_config(
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found.")
 
+    # Load config from qr_secret_key (JSON string)
+    config_dict = {
+        "show_blood_group": True,
+        "show_allergies": True,
+        "show_emergency_contact": True,
+        "show_chronic_conditions": True
+    }
+    if profile.qr_secret_key:
+        try:
+            config_dict.update(json.loads(profile.qr_secret_key))
+        except:
+            pass
+
     return {
         "qr_code_url": profile.qr_code_url,
-        "config": {
-            "show_blood_group": True,
-            "show_allergies": True,
-            "show_emergency_contact": True,
-            "show_chronic_conditions": True
-        }
+        "config": config_dict
     }
 
 @router.put("/patient/emergency-qr/config")
@@ -52,8 +66,74 @@ async def update_emergency_qr_config(
     """
     Update which fields are visible on the emergency landing page.
     """
-    # Logic to save config in DB (could be a JSONB field in PatientProfile)
+    result = await db.execute(
+        select(PatientProfile).where(PatientProfile.user_id == current_user.id)
+    )
+    profile = result.scalars().first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+        
+    # Store config as JSON in qr_secret_key for now
+    profile.qr_secret_key = json.dumps(config.model_dump())
+    await db.commit()
     return {"success": True, "message": "Configuration updated"}
+
+@router.post("/patient/emergency-qr/regenerate", response_model=EmergencyQRRead)
+async def regenerate_emergency_qr(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    Generate a new encrypted QR token and create the QR image file.
+    """
+    result = await db.execute(
+        select(PatientProfile).where(PatientProfile.user_id == current_user.id)
+    )
+    profile = result.scalars().first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profile not found")
+
+    # 1. Generate encrypted token
+    token = encrypt_qr_token(str(profile.id))
+    
+    # 2. Generate QR Image
+    emergency_url = f"{settings.BASE_URL}/api/v1/emergency/{token}"
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(emergency_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # 3. Save Image
+    filename = f"qr_{profile.id}.png"
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    profile.qr_code_url = storage_service.upload_bytes(
+        f"static/qrcodes/{filename}",
+        buffer.getvalue(),
+        "image/png",
+    )
+    
+    # 4. Update Profile
+    await db.commit()
+    await db.refresh(profile)
+    
+    # Get current config
+    config_dict = {}
+    if profile.qr_secret_key:
+        try:
+            config_dict = json.loads(profile.qr_secret_key)
+        except:
+            pass
+            
+    return {
+        "qr_code_url": profile.qr_code_url,
+        "config": config_dict or {
+            "show_blood_group": True,
+            "show_allergies": True,
+            "show_emergency_contact": True,
+            "show_chronic_conditions": True
+        }
+    }
 
 @router.get("/emergency/{qr_token}", response_model=EmergencyProfileRead)
 async def public_emergency_access(
@@ -61,18 +141,19 @@ async def public_emergency_access(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    PUBLIC: Decode the QR token and return the patient's emergency profile.
-    NOTE: Structurally implemented. Decryption logic placeholder.
+    PUBLIC: Decode the QR token and return the patient's filtered emergency profile.
     """
-    # 1. In a real scenario: Decrypt qr_token using AES-256-GCM with master key
-    # 2. Extract patient_id from decrypted payload
-    # For now, we simulate by assuming qr_token is the patient_id (for development testing)
+    # 1. Decrypt token to get patient_id
+    patient_id_str = decrypt_qr_token(qr_token)
+    if not patient_id_str:
+        raise HTTPException(status_code=400, detail="Invalid or expired emergency token.")
+    
     try:
-        patient_id = UUID(qr_token)
+        patient_id = UUID(patient_id_str)
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid emergency token.")
+        raise HTTPException(status_code=400, detail="Invalid token content.")
 
-    # Fetch profile and records flagged as emergency visible
+    # 2. Fetch profile
     result = await db.execute(
         select(PatientProfile).where(PatientProfile.id == patient_id)
     )
@@ -81,7 +162,20 @@ async def public_emergency_access(
     if not profile:
         raise HTTPException(status_code=404, detail="Emergency profile not found.")
 
-    # Fetch records marked for emergency
+    # 3. Load Visibility Config
+    config = {
+        "show_blood_group": True,
+        "show_allergies": True,
+        "show_emergency_contact": True,
+        "show_chronic_conditions": True
+    }
+    if profile.qr_secret_key:
+        try:
+            config.update(json.loads(profile.qr_secret_key))
+        except:
+            pass
+
+    # 4. Fetch emergency records
     rec_result = await db.execute(
         select(MedicalRecord).where(
             MedicalRecord.patient_id == patient_id,
@@ -90,21 +184,33 @@ async def public_emergency_access(
     )
     records = rec_result.scalars().all()
 
-    return {
+    # 5. Build filtered response
+    response = {
         "patient_name": profile.full_name,
-        "blood_group": profile.blood_group,
-        "gender": profile.gender,
-        "allergies": profile.allergies or [],
-        "chronic_conditions": profile.chronic_conditions or [],
-        "emergency_contact": {
+        "gender": profile.gender
+    }
+    
+    if config.get("show_blood_group"):
+        response["blood_group"] = profile.blood_group
+    
+    if config.get("show_allergies"):
+        response["allergies"] = profile.allergies or []
+        
+    if config.get("show_chronic_conditions"):
+        response["chronic_conditions"] = profile.chronic_conditions or []
+        
+    if config.get("show_emergency_contact"):
+        response["emergency_contact"] = {
             "name": profile.emergency_contact_name,
             "phone": profile.emergency_contact_phone
-        },
-        "emergency_records": [
-            {
-                "title": r.title,
-                "record_type": r.record_type,
-                "url": r.file_url # In real app, generate short-lived presigned URL
-            } for r in records
-        ]
-    }
+        }
+
+    response["emergency_records"] = [
+        {
+            "title": r.title,
+            "record_type": r.record_type,
+            "url": r.file_url 
+        } for r in records
+    ]
+    
+    return response

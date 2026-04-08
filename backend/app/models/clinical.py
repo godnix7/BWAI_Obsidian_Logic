@@ -72,3 +72,6 @@ class Consent(Base):
     granted_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True), nullable=True)
     revoked_at = Column(DateTime(timezone=True), nullable=True)
+
+    # Relationship
+    patient = sa_relationship("PatientProfile", lazy="selectin")
