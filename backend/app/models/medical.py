@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Date, Integer, BigInteger, Boolean, Text, ForeignKey, Enum, text, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import enum
 from app.db.base_class import Base
 
@@ -42,6 +43,9 @@ class Prescription(Base):
     valid_until = Column(Date, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
+    # Relationships
+    medications = relationship("PrescriptionMedication", back_populates="prescription", lazy="selectin")
+
 class PrescriptionMedication(Base):
     __tablename__ = "prescription_medications"
 
@@ -52,3 +56,6 @@ class PrescriptionMedication(Base):
     frequency = Column(String(100), nullable=True)
     duration = Column(String(100), nullable=True)
     instructions = Column(Text, nullable=True)
+
+    # Relationships
+    prescription = relationship("Prescription", back_populates="medications")

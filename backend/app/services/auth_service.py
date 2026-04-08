@@ -31,7 +31,6 @@ async def login_user(db: AsyncSession, email: str, password: str):
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalars().first()
     
-    # 2. Verify password and active status
     if not user or not verify_password(password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, 
@@ -44,7 +43,30 @@ async def login_user(db: AsyncSession, email: str, password: str):
             detail="User account is inactive"
         )
         
-    # 3. Generate token
-    token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
+    # 2. Generate tokens
+    access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
-    return {"access_token": token, "user": user}
+    return {
+        "access_token": access_token, 
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": user
+    }
+
+async def refresh_access_token(db: AsyncSession, refresh_token: str):
+    from app.core.security import decode_token
+    payload = decode_token(refresh_token)
+    
+    if not payload or payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+        
+    user_id = payload.get("sub")
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalars().first()
+    
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="User not found or inactive")
+        
+    new_access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
+    return {"access_token": new_access_token, "token_type": "bearer"}
