@@ -7,17 +7,17 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # Database
-    # Providing defaults to prevent validation errors if .env is missing
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/medilocker"
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    # Auth (New structure from sujal branch)
+    # Auth
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     JWT_PRIVATE_KEY_PATH: str = "./keys/private.pem"
     JWT_PUBLIC_KEY_PATH: str = "./keys/public.pem"
+    SECRET_KEY: str = "super-secret-hackathon-key" # Fallback if keys are not used
 
-    # Patient / QR settings (Restored)
+    # Patient / QR settings 
     QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
 
     # CORS

@@ -3,24 +3,38 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status, Depends
 from app.core.database import get_db
 from app.models.user import User, UserRole
-
-# Mock Dependency for Current User
-# This will be replaced by actual JWT auth later
-async def get_current_user(db: AsyncSession = Depends(get_db)) -> User:
-    """
-    Temporary mock dependency. 
-    In a real scenario, this would decode the JWT and fetch from DB.
-    """
-    # For now, we still return a 401 until the integrated Auth connects here
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication system not yet linked. Work in progress."
-    )
+from app.core.security import get_current_user
 
 async def get_current_patient(user: User = Depends(get_current_user)) -> User:
-    if user.role != UserRole.patient: # Note: new role might be lowercase 'patient' based on sujal branch
+    """
+    Dependency to ensure the current user is a patient.
+    Matches lowercase roles introduced in the recent merge.
+    """
+    if user.role != UserRole.patient:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail="Forbidden: Access is restricted to patients only."
+        )
+    return user
+
+async def get_current_doctor(user: User = Depends(get_current_user)) -> User:
+    """
+    Dependency to ensure the current user is a doctor.
+    """
+    if user.role != UserRole.doctor:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Access is restricted to doctors only."
+        )
+    return user
+
+async def get_current_hospital(user: User = Depends(get_current_user)) -> User :
+    """
+    Dependency to ensure the current user is a hospital/admin.
+    """
+    if user.role != UserRole.hospital:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Access is restricted to hospitals only."
         )
     return user
