@@ -3,6 +3,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "@studio-freight/lenis";
 import * as THREE from "three";
+import { heroReveal, float, scrollReveal } from "../utils/animations";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -44,41 +45,11 @@ export default function MediLockerPage() {
     window.addEventListener("mousemove", handleMouseMove);
 
     /* ── HERO REVEAL ───────────────────────────────────── */
-    const heroTl = gsap.timeline({ delay: 0.2 });
-    heroTl
-      .fromTo(
-        ".hero-title-wrap",
-        { y: 80, opacity: 0 },
-        { y: 0, opacity: 1, duration: 1.1, ease: "power4.out" }
-      )
-      .fromTo(
-        ".hero-para",
-        { y: 40, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" },
-        "-=0.6"
-      )
-      .fromTo(
-        ".hero-cta",
-        { y: 20, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.7, ease: "back.out(1.5)" },
-        "-=0.5"
-      )
-      .fromTo(
-        ".hero-img",
-        { scale: 0.88, opacity: 0 },
-        { scale: 1, opacity: 1, duration: 1.0, ease: "power3.out" },
-        "-=0.8"
-      );
+    heroReveal();
 
     /* ── FLOAT hero image ──────────────────────────────── */
     if (heroImgRef.current) {
-      gsap.to(heroImgRef.current, {
-        y: -12,
-        duration: 2.8,
-        ease: "power1.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
+      float(heroImgRef.current);
     }
 
     /* ── SCROLL LINE ───────────────────────────────────── */
@@ -89,9 +60,9 @@ export default function MediLockerPage() {
         {
           height: "100%",
           scrollTrigger: {
-            trigger: ".about-card",
-            start: "top 85%",
-            end: "bottom 30%",
+            trigger: "#cards-section",
+            start: "top 60%",
+            end: "bottom 80%",
             scrub: true,
           },
         }
@@ -99,21 +70,12 @@ export default function MediLockerPage() {
     }
 
     /* ── HOW IT WORKS REVEAL ────────────────────────── */
-    gsap.fromTo(
-      ".how-it-works-title",
-      { y: 50, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: "#how-it-works",
-          start: "top 80%",
-          toggleActions: "play none none reverse",
-        },
-      }
-    );
+    scrollReveal(".how-it-works-title", {
+      from: { y: 50 },
+      duration: 1,
+      ease: "power3.out",
+      scrollTrigger: { trigger: "#how-it-works", start: "top 80%" }
+    });
 
     gsap.fromTo(
       ".step-card",
@@ -143,38 +105,16 @@ export default function MediLockerPage() {
     }
 
     /* ── ABOUT CARD — scroll reveal (dramatic from top) ──────── */
-    gsap.fromTo(
-      ".about-card",
-      { y: -300, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 1.5,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: ".about-card",
-          start: "top 90%",
-          toggleActions: "play none none reverse",
-        },
-      }
-    );
+    scrollReveal(".about-card", {
+      from: { y: -300 },
+      scrollTrigger: { trigger: ".about-card", start: "top 90%" }
+    });
 
     /* ── SERVICES CARD — scroll reveal (dramatic from bottom) ─ */
-    gsap.fromTo(
-      ".services-card",
-      { y: 300, opacity: 0 },
-      {
-        y: 0,
-        opacity: 1,
-        duration: 1.5,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: ".services-card",
-          start: "top 90%",
-          toggleActions: "play none none reverse",
-        },
-      }
-    );
+    scrollReveal(".services-card", {
+      from: { y: 300 },
+      scrollTrigger: { trigger: ".services-card", start: "top 90%" }
+    });
 
     /* ── THREE.JS BACKGROUND ───────────────────────────── */
     let animId;
@@ -195,38 +135,38 @@ export default function MediLockerPage() {
       threeRef.current.appendChild(renderer.domElement);
     }
 
-    // Hero sphere — teal
+    // Hero sphere — Amber
     const geometry = new THREE.SphereGeometry(5, 64, 64);
     const material = new THREE.MeshStandardMaterial({
-      color: 0x00e5c8,
-      roughness: 0.2,
-      metalness: 0.9,
-      emissive: 0x005544,
+      color: 0xF59E0B,
+      roughness: 0.25,
+      metalness: 0.85,
+      emissive: 0x4A3000,
       emissiveIntensity: 0.5,
     });
     const sphere = new THREE.Mesh(geometry, material);
     scene.add(sphere);
 
-    // Secondary torus — violet
+    // Secondary torus — Rose
     const torusGeo = new THREE.TorusGeometry(3, 0.6, 32, 100);
     const torusMat = new THREE.MeshStandardMaterial({
-      color: 0x7b6ff0,
-      roughness: 0.1,
+      color: 0xF43F5E,
+      roughness: 0.15,
       metalness: 1.0,
-      emissive: 0x2a2070,
+      emissive: 0x3D0015,
       emissiveIntensity: 0.5,
     });
     const torus = new THREE.Mesh(torusGeo, torusMat);
     torus.position.set(6, -3, -4);
     scene.add(torus);
 
-    // Teal point light
-    const light1 = new THREE.PointLight("#00E5C8", 4, 50);
+    // Amber point light
+    const light1 = new THREE.PointLight("#F59E0B", 4, 50);
     light1.position.set(5, 8, 5);
     scene.add(light1);
 
-    // Violet rim light
-    const light2 = new THREE.PointLight("#7B6FF0", 3, 40);
+    // Rose rim light
+    const light2 = new THREE.PointLight("#F43F5E", 3, 40);
     light2.position.set(-8, -5, -5);
     scene.add(light2);
 
@@ -289,7 +229,7 @@ export default function MediLockerPage() {
           position: "fixed",
           width: 200,
           height: 200,
-          background: "rgba(0, 229, 200, 0.15)",
+          background: "var(--accent-primary-glow)",
           filter: "blur(80px)",
           borderRadius: "50%",
           pointerEvents: "none",
@@ -314,7 +254,7 @@ export default function MediLockerPage() {
             height: 700,
             top: -200,
             left: -200,
-            background: "rgba(0, 229, 200, 0.12)",
+            background: "var(--accent-primary-soft)",
             filter: "blur(180px)",
             borderRadius: "50%",
           }}
@@ -326,7 +266,7 @@ export default function MediLockerPage() {
             height: 600,
             bottom: -200,
             right: -200,
-            background: "rgba(123, 111, 240, 0.12)",
+            background: "var(--accent-secondary-soft)",
             filter: "blur(160px)",
             borderRadius: "50%",
           }}
@@ -368,7 +308,7 @@ export default function MediLockerPage() {
             zIndex: 100,
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            background: "rgba(2, 8, 17, 0.60)",
+            background: "var(--bg-elevated)",
             borderBottom: "1px solid var(--border-default)",
             boxShadow: "var(--shadow-glow)",
           }}
@@ -456,7 +396,7 @@ export default function MediLockerPage() {
                   letterSpacing: "-0.02em",
                   lineHeight: 1.05,
                   margin: 0,
-                  background: "linear-gradient(135deg, #00E5C8, #7B6FF0)",
+                  background: "var(--gradient-accent)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text",
@@ -522,8 +462,7 @@ export default function MediLockerPage() {
                 width: 250,
                 height: 250,
                 borderRadius: "50%",
-                background:
-                  "radial-gradient(circle, rgba(0,229,200,0.15) 0%, transparent 70%)",
+                background: "var(--gradient-glow)",
                 filter: "blur(30px)",
               }}
             />
@@ -550,19 +489,19 @@ export default function MediLockerPage() {
                 height: 110,
                 position: "relative",
                 zIndex: 2,
-                filter: "drop-shadow(0 0 20px rgba(0,229,200,0.3))",
+                filter: "drop-shadow(0 0 20px var(--accent-primary-glow))",
               }}
             >
               {/* Shield shape */}
               <path
                 d="M40 5 L72 20 L72 50 C72 72 58 88 40 95 C22 88 8 72 8 50 L8 20 Z"
                 fill="none"
-                stroke="rgba(0,229,200,0.25)"
+                stroke="var(--border-accent)"
                 strokeWidth="2"
               />
               <path
                 d="M40 10 L68 23 L68 50 C68 69 55 84 40 90 C25 84 12 69 12 50 L12 23 Z"
-                fill="rgba(0,229,200,0.04)"
+                fill="var(--accent-primary-soft)"
               />
 
               {/* Lock body */}
@@ -572,8 +511,8 @@ export default function MediLockerPage() {
                 width="32"
                 height="26"
                 rx="4"
-                fill="rgba(0,229,200,0.15)"
-                stroke="rgba(0,229,200,0.35)"
+                fill="var(--accent-primary-glow)"
+                stroke="var(--border-accent)"
                 strokeWidth="1.5"
               />
 
@@ -581,20 +520,20 @@ export default function MediLockerPage() {
               <path
                 d="M30 45 L30 36 C30 28 35 24 40 24 C45 24 50 28 50 36 L50 45"
                 fill="none"
-                stroke="rgba(0,229,200,0.35)"
+                stroke="var(--border-accent)"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
 
               {/* Keyhole */}
-              <circle cx="40" cy="55" r="3.5" fill="rgba(0,229,200,0.5)" />
+              <circle cx="40" cy="55" r="3.5" fill="var(--accent-primary)" />
               <rect
                 x="38.5"
                 y="55"
                 width="3"
                 height="7"
                 rx="1.5"
-                fill="rgba(0,229,200,0.5)"
+                fill="var(--accent-primary)"
               />
             </svg>
 
@@ -759,6 +698,7 @@ export default function MediLockerPage() {
 
         {/* ── CARDS SECTION (flow layout — no overlap) ──── */}
         <section
+          id="cards-section"
           style={{
             position: "relative",
             maxWidth: 1280,
@@ -787,7 +727,7 @@ export default function MediLockerPage() {
                 borderRadius: 4,
                 background: "var(--gradient-line)",
                 boxShadow:
-                  "0 0 20px rgba(0, 229, 200, 0.6), 0 0 60px rgba(0, 229, 200, 0.2)",
+                  "0 0 20px var(--accent-primary-glow), 0 0 60px var(--accent-primary-soft)",
                 height: 0, /* animated by GSAP */
               }}
             />
@@ -800,7 +740,7 @@ export default function MediLockerPage() {
                 height: "100%",
                 opacity: 0.6,
                 backgroundImage:
-                  "repeating-linear-gradient(120deg, #00E5C8 0px, #00E5C8 2px, transparent 2px, transparent 10px)",
+                  "repeating-linear-gradient(120deg, var(--accent-primary) 0px, var(--accent-primary) 2px, transparent 2px, transparent 10px)",
                 backgroundSize: "20px 200px",
               }}
             />
@@ -1040,7 +980,7 @@ export default function MediLockerPage() {
             }}
           >
             © 2026 MediLocker — All Rights Reserved
-        </p>
+          </p>
         </footer>
       </div>
     </>

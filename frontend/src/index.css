@@ -2,10 +2,10 @@
 
 :root {
   /* === BACKGROUNDS === */
-  --bg-base:        #0F0F12;
-  --bg-surface:     #18181D;
-  --bg-elevated:    #1F1F26;
-  --bg-overlay:     rgba(255, 255, 255, 0.03);
+  --bg-base:        #0F0F12;   /* Deepest background — warm near-black */
+  --bg-surface:     #18181D;   /* Card/panel base */
+  --bg-elevated:    #1F1F26;   /* Modals, dropdowns */
+  --bg-overlay:     rgba(255, 255, 255, 0.03);  /* Glass fill */
 
   /* === GLASS VARIANTS === */
   --glass-light:    rgba(255, 255, 255, 0.04);
@@ -15,32 +15,32 @@
   --glass-border-accent: rgba(245, 158, 11, 0.20);
 
   /* === PRIMARY ACCENT — Amber/Gold === */
-  --accent-primary:       #F59E0B;
-  --accent-primary-dim:   #D97706;
+  --accent-primary:       #F59E0B;   /* Vibrant amber — CTAs, links, active states */
+  --accent-primary-dim:   #D97706;   /* Hover states */
   --accent-primary-glow:  rgba(245, 158, 11, 0.20);
   --accent-primary-soft:  rgba(245, 158, 11, 0.08);
 
   /* === SECONDARY ACCENT — Rose/Coral === */
-  --accent-secondary:      #F43F5E;
+  --accent-secondary:      #F43F5E;  /* Charts, tags, secondary buttons */
   --accent-secondary-dim:  #E11D48;
   --accent-secondary-glow: rgba(244, 63, 94, 0.20);
   --accent-secondary-soft: rgba(244, 63, 94, 0.08);
 
   /* === TERTIARY ACCENT — Mint === */
-  --accent-success:        #34D399;
+  --accent-success:        #34D399;  /* Success states, health indicators */
   --accent-success-dim:    #10B981;
   --accent-success-glow:   rgba(52, 211, 153, 0.18);
 
   /* === SEMANTIC COLORS === */
-  --color-warning:  #FBBF24;
-  --color-error:    #EF4444;
-  --color-info:     #60A5FA;
+  --color-warning:  #FBBF24;   /* Warnings, pending status */
+  --color-error:    #EF4444;   /* Errors, critical alerts */
+  --color-info:     #60A5FA;   /* Info banners */
 
   /* === TEXT === */
-  --text-primary:   #F5F0E8;
-  --text-secondary: #9B9481;
-  --text-muted:     #5C5647;
-  --text-inverse:   #0F0F12;
+  --text-primary:   #F5F0E8;  /* Warm white — main body text */
+  --text-secondary: #9B9481;  /* Warm gray — subtext, captions */
+  --text-muted:     #5C5647;  /* Warm muted — placeholders, disabled */
+  --text-inverse:   #0F0F12;  /* Text on light elements */
 
   /* === BORDERS === */
   --border-subtle:  rgba(255, 255, 255, 0.05);
@@ -58,6 +58,14 @@
   /* === SHADOWS === */
   --shadow-card:    0 4px 24px rgba(0, 0, 0, 0.50), 0 1px 2px rgba(0,0,0,0.4);
   --shadow-glow:    0 0 30px rgba(245, 158, 11, 0.12), 0 0 60px rgba(245, 158, 11, 0.04);
+  --shadow-modal:   0 24px 64px rgba(0, 0, 0, 0.75);
+  --shadow-button:  0 4px 16px rgba(245, 158, 11, 0.25);
+
+  /* === BLUR === */
+  --blur-sm:  blur(8px);
+  --blur-md:  blur(16px);
+  --blur-lg:  blur(24px);
+  --blur-xl:  blur(40px);
 
   /* === FONTS === */
   --font-display: 'Sora', system-ui, sans-serif;
@@ -76,10 +84,18 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   overflow-x: hidden;
+  min-height: 100vh;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+}
+
+.gradient-text {
+  background: var(--gradient-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .btn-primary {
@@ -89,7 +105,17 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 24px;
   border-radius: 10px;
   border: none;
-  cursor: pointer;
+  box-shadow: var(--shadow-button);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.40);
+}
+
+.btn-primary:active {
+  transform: translateY(0px);
 }
 
 .btn-secondary {
@@ -99,5 +125,20 @@ h1, h2, h3, h4, h5, h6 {
   padding: 10px 24px;
   border-radius: 10px;
   font-weight: 500;
-  cursor: pointer;
+  backdrop-filter: var(--blur-sm);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--accent-primary-soft);
+  border-color: var(--accent-primary);
+}
+
+.glass-card {
+  background: var(--glass-light);
+  backdrop-filter: var(--blur-md);
+  -webkit-backdrop-filter: var(--blur-md);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
 }
