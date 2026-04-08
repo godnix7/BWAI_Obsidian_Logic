@@ -1,13 +1,19 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "@studio-freight/lenis";
 import * as THREE from "three";
-import { heroReveal, float, scrollReveal } from "../utils/animations";
+const { 
+  Vector3, CatmullRomCurve3, TubeGeometry, PerspectiveCamera, OrthographicCamera, Scene, WebGLRenderer, 
+  Group, MeshStandardMaterial, Mesh, SphereGeometry, CylinderGeometry, AmbientLight, 
+  PointLight, ACESFilmicToneMapping 
+} = THREE;
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function MediLockerPage() {
+  const navigate = useNavigate();
   const lineRef = useRef(null);
   const spiralRef = useRef(null);
   const threeRef = useRef(null);
@@ -45,76 +51,189 @@ export default function MediLockerPage() {
     window.addEventListener("mousemove", handleMouseMove);
 
     /* ── HERO REVEAL ───────────────────────────────────── */
-    heroReveal();
+    const heroTl = gsap.timeline({ delay: 0.2 });
+    heroTl
+      .fromTo(
+        ".hero-title-wrap",
+        { y: 80, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.1, ease: "power4.out" }
+      )
+      .fromTo(
+        ".hero-para",
+        { y: 40, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.9, ease: "power3.out" },
+        "-=0.6"
+      )
+      .fromTo(
+        ".hero-cta",
+        { y: 20, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.7, ease: "back.out(1.5)" },
+        "-=0.5"
+      )
+      .fromTo(
+        ".hero-img",
+        { scale: 0.88, opacity: 0 },
+        { scale: 1, opacity: 1, duration: 1.0, ease: "power3.out" },
+        "-=0.8"
+      );
 
     /* ── FLOAT hero image ──────────────────────────────── */
     if (heroImgRef.current) {
-      float(heroImgRef.current);
+      gsap.to(heroImgRef.current, {
+        y: -12,
+        duration: 2.8,
+        ease: "power1.inOut",
+        yoyo: true,
+        repeat: -1,
+      });
     }
 
-    /* ── SCROLL LINE ───────────────────────────────────── */
+    /* ── SCROLL LINE ANIMATION (Restored) ──────────────── */
+    const lineCanvas = document.createElement('canvas');
+    const lineRenderer = new WebGLRenderer({ canvas: lineCanvas, alpha: true, antialias: true });
+    lineRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    
+    const lineScene = new Scene();
+    const lineGroup = new Group();
+    
+    // The main vertical beam - CYBER NEON MAGENTA
+    const beamGeo = new CylinderGeometry(0.06, 0.06, 60, 8);
+    const beamMat = new MeshStandardMaterial({ 
+      color: 0xFF00FF, emissive: 0xFF00FF, emissiveIntensity: 3, transparent: true, opacity: 0.8 
+    });
+    const mainBeam = new Mesh(beamGeo, beamMat);
+    lineGroup.add(mainBeam);
+
+    // Floating data particles around the line
+    const pCount = 40;
+    const pGeo = new SphereGeometry(0.08, 8, 8);
+    for(let i=0; i<pCount; i++) {
+        const p = new Mesh(pGeo, beamMat);
+        p.position.set((Math.random()-0.5)*2, (Math.random()-0.5)*60, (Math.random()-0.5)*2);
+        lineGroup.add(p);
+    }
+
+    lineScene.add(lineGroup);
+    lineScene.add(new AmbientLight(0xffffff, 0.8));
+    const lLight = new PointLight(0xFF00FF, 5); // Brighter magenta glow
+    lLight.position.set(2, 5, 5);
+    lineScene.add(lLight);
+
+    let lineCamera = new OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+    let updateLineSize = () => {};
+
     if (lineRef.current) {
-      gsap.fromTo(
-        lineRef.current,
-        { height: 0 },
-        {
-          height: "100%",
-          scrollTrigger: {
-            trigger: "#cards-section",
-            start: "top 60%",
-            end: "bottom 80%",
-            scrub: true,
-          },
-        }
+      lineRef.current.appendChild(lineRenderer.domElement);
+      
+      const rect = lineRef.current.getBoundingClientRect();
+      const frustumSize = 25; 
+      const aspect = rect.width / rect.height;
+      lineCamera = new OrthographicCamera(
+        frustumSize * aspect / -2, frustumSize * aspect / 2, 
+        frustumSize / 2, frustumSize / -2, 
+        0.1, 1000
       );
+      lineCamera.position.z = 20;
+
+      updateLineSize = () => {
+        if (!lineRef.current) return;
+        const nRect = lineRef.current.getBoundingClientRect();
+        lineRenderer.setSize(nRect.width, nRect.height);
+        const nAspect = nRect.width / nRect.height;
+        lineCamera.left = frustumSize * nAspect / -2;
+        lineCamera.right = frustumSize * nAspect / 2;
+        lineCamera.top = frustumSize / 2;
+        lineCamera.bottom = frustumSize / -2;
+        lineCamera.updateProjectionMatrix();
+      };
+      updateLineSize();
+      window.addEventListener('resize', updateLineSize);
+
+      gsap.to(lineGroup.rotation, {
+        y: Math.PI * 4,
+        scrollTrigger: {
+          trigger: ".about-card",
+          start: "top 95%",
+          end: "bottom 10%",
+          scrub: 1.5
+        }
+      });
+      
+      gsap.to(lineGroup.position, {
+        y: -10,
+        scrollTrigger: {
+          trigger: ".about-card",
+          start: "top 95%",
+          end: "bottom 10%",
+          scrub: 1
+        }
+      });
     }
 
-    /* ── HOW IT WORKS REVEAL ────────────────────────── */
-    scrollReveal(".how-it-works-title", {
-      from: { y: 50 },
-      duration: 1,
-      ease: "power3.out",
-      scrollTrigger: { trigger: "#how-it-works", start: "top 80%" }
+    // ── CONTINUOUS GLOW & COLOR CYCLE ──────────────────
+    gsap.to(beamMat, {
+      emissiveIntensity: 5,
+      duration: 1.2,
+      yoyo: true,
+      repeat: -1,
+      ease: "sine.inOut"
     });
 
+    // Subtly cycle color between Magenta and Cyan
+    gsap.to(beamMat.color, {
+      r: 0, g: 0.8, b: 1, // Cyanish
+      duration: 4,
+      repeat: -1,
+      yoyo: true,
+      ease: "power1.inOut"
+    });
+
+    let hAnimId;
+    const animateLine = () => {
+      hAnimId = requestAnimationFrame(animateLine);
+      lineGroup.children.forEach((child, i) => {
+          if(i > 0) child.position.y += 0.05; // Particles float up
+          if(child.position.y > 30) child.position.y = -30;
+      });
+      lineRenderer.render(lineScene, lineCamera);
+    };
+    animateLine();
+
+    /* ── ABOUT CARD — premium reveal (fade + scale) ────────── */
     gsap.fromTo(
-      ".step-card",
-      { y: 150, opacity: 0 },
+      ".about-card",
+      { y: 60, scale: 0.96, opacity: 0 },
       {
         y: 0,
+        scale: 1,
         opacity: 1,
         duration: 1.2,
-        stagger: 0.2,
-        ease: "power2.out",
+        ease: "expo.out",
         scrollTrigger: {
-          trigger: ".step-card",
-          start: "top 85%",
+          trigger: ".about-card",
+          start: "top 90%",
           toggleActions: "play none none reverse",
         },
       }
     );
 
-    /* ── SPIRAL ANIMATION ──────────────────────────────── */
-    if (spiralRef.current) {
-      gsap.to(spiralRef.current, {
-        backgroundPosition: "0px 1200px",
-        duration: 6,
-        repeat: -1,
-        ease: "linear",
-      });
-    }
-
-    /* ── ABOUT CARD — scroll reveal (dramatic from top) ──────── */
-    scrollReveal(".about-card", {
-      from: { y: -300 },
-      scrollTrigger: { trigger: ".about-card", start: "top 90%" }
-    });
-
-    /* ── SERVICES CARD — scroll reveal (dramatic from bottom) ─ */
-    scrollReveal(".services-card", {
-      from: { y: 300 },
-      scrollTrigger: { trigger: ".services-card", start: "top 90%" }
-    });
+    /* ── SERVICES CARD — premium reveal (fade + scale) ─────── */
+    gsap.fromTo(
+      ".services-card",
+      { y: 60, scale: 0.96, opacity: 0 },
+      {
+        y: 0,
+        scale: 1,
+        opacity: 1,
+        duration: 1.2,
+        ease: "expo.out",
+        scrollTrigger: {
+          trigger: ".services-card",
+          start: "top 90%",
+          toggleActions: "play none none reverse",
+        },
+      }
+    );
 
     /* ── THREE.JS BACKGROUND ───────────────────────────── */
     let animId;
@@ -135,59 +254,10 @@ export default function MediLockerPage() {
       threeRef.current.appendChild(renderer.domElement);
     }
 
-    // Hero sphere — Amber
-    const geometry = new THREE.SphereGeometry(5, 64, 64);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xF59E0B,
-      roughness: 0.25,
-      metalness: 0.85,
-      emissive: 0x4A3000,
-      emissiveIntensity: 0.5,
-    });
-    const sphere = new THREE.Mesh(geometry, material);
-    scene.add(sphere);
-
-    // Secondary torus — Rose
-    const torusGeo = new THREE.TorusGeometry(3, 0.6, 32, 100);
-    const torusMat = new THREE.MeshStandardMaterial({
-      color: 0xF43F5E,
-      roughness: 0.15,
-      metalness: 1.0,
-      emissive: 0x3D0015,
-      emissiveIntensity: 0.5,
-    });
-    const torus = new THREE.Mesh(torusGeo, torusMat);
-    torus.position.set(6, -3, -4);
-    scene.add(torus);
-
-    // Amber point light
-    const light1 = new THREE.PointLight("#F59E0B", 4, 50);
-    light1.position.set(5, 8, 5);
-    scene.add(light1);
-
-    // Rose rim light
-    const light2 = new THREE.PointLight("#F43F5E", 3, 40);
-    light2.position.set(-8, -5, -5);
-    scene.add(light2);
-
-    // White front fill
-    const light3 = new THREE.PointLight("#ffffff", 2, 30);
-    light3.position.set(0, 0, 12);
-    scene.add(light3);
-
-    // Ambient
-    const ambient = new THREE.AmbientLight("#ffffff", 0.4);
-    scene.add(ambient);
-
-    camera.position.z = 15;
+    camera.position.z = 18;
 
     function animate() {
       animId = requestAnimationFrame(animate);
-      sphere.rotation.y += 0.007;
-      sphere.rotation.x += 0.003;
-      torus.rotation.y += 0.005;
-      torus.rotation.x += 0.002;
-      torus.rotation.z += 0.001;
       renderer.render(scene, camera);
     }
     animate();
@@ -205,13 +275,15 @@ export default function MediLockerPage() {
     return () => {
       lenis.destroy();
       cancelAnimationFrame(animId);
+      cancelAnimationFrame(hAnimId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
-      renderer.dispose();
-      geometry.dispose();
-      material.dispose();
-      torusGeo.dispose();
-      torusMat.dispose();
+      window.removeEventListener("resize", updateLineSize);
+      
+      renderer?.dispose();
+      lineRenderer?.dispose();
+      beamMat?.dispose();
+      ScrollTrigger.getAll().forEach(st => st.kill());
     };
   }, []);
 
@@ -229,7 +301,7 @@ export default function MediLockerPage() {
           position: "fixed",
           width: 200,
           height: 200,
-          background: "var(--accent-primary-glow)",
+          background: "var(--accent-glow)",
           filter: "blur(80px)",
           borderRadius: "50%",
           pointerEvents: "none",
@@ -254,7 +326,7 @@ export default function MediLockerPage() {
             height: 700,
             top: -200,
             left: -200,
-            background: "var(--accent-primary-soft)",
+            background: "var(--accent-soft)",
             filter: "blur(180px)",
             borderRadius: "50%",
           }}
@@ -266,7 +338,7 @@ export default function MediLockerPage() {
             height: 600,
             bottom: -200,
             right: -200,
-            background: "var(--accent-secondary-soft)",
+            background: "rgba(160, 0, 109, 0.08)",
             filter: "blur(160px)",
             borderRadius: "50%",
           }}
@@ -282,7 +354,7 @@ export default function MediLockerPage() {
           left: 0,
           width: "100%",
           height: "100%",
-          opacity: 0.35,
+          opacity: 0.15,
           zIndex: -1,
           pointerEvents: "none",
         }}
@@ -308,7 +380,7 @@ export default function MediLockerPage() {
             zIndex: 100,
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            background: "var(--bg-elevated)",
+            background: "rgba(239, 250, 253, 0.70)",
             borderBottom: "1px solid var(--border-default)",
             boxShadow: "var(--shadow-glow)",
           }}
@@ -327,8 +399,8 @@ export default function MediLockerPage() {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 700,
-                fontSize: 22,
-                letterSpacing: "0.04em",
+                fontSize: 26,
+                letterSpacing: "0.02em",
                 background: "var(--gradient-accent)",
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -336,7 +408,7 @@ export default function MediLockerPage() {
                 margin: 0,
               }}
             >
-              MEDILOCKER
+              MediLocker
             </h1>
 
             <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
@@ -357,7 +429,7 @@ export default function MediLockerPage() {
                     transition: "color 0.2s",
                   }}
                   onMouseEnter={(e) =>
-                    (e.target.style.color = "var(--accent-primary)")
+                    (e.target.style.color = "var(--accent)")
                   }
                   onMouseLeave={(e) =>
                     (e.target.style.color = "var(--text-secondary)")
@@ -366,8 +438,8 @@ export default function MediLockerPage() {
                   {item.label}
                 </a>
               ))}
-              <button className="btn-secondary">Login</button>
-              <button className="btn-primary">Register</button>
+              <button className="btn-secondary" onClick={() => navigate("/login")}>Login</button>
+              <button className="btn-primary" onClick={() => navigate("/register")}>Register</button>
             </div>
           </div>
         </nav>
@@ -391,10 +463,10 @@ export default function MediLockerPage() {
               <h2
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: 72,
-                  fontWeight: 800,
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.05,
+                  fontSize: 84,
+                  fontWeight: 700,
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.1,
                   margin: 0,
                   background: "var(--gradient-accent)",
                   WebkitBackgroundClip: "text",
@@ -402,7 +474,7 @@ export default function MediLockerPage() {
                   backgroundClip: "text",
                 }}
               >
-                MEDILOCKER
+                Your Health.<br/>Your Vault.
               </h2>
             </div>
 
@@ -423,12 +495,12 @@ export default function MediLockerPage() {
 
             <div
               className="hero-cta"
-              style={{ display: "flex", gap: 16, marginTop: 36 }}
+              style={{ display: "flex", gap: 16, marginTop: 36, position: "relative", zIndex: 110 }}
             >
-              <button className="btn-primary" style={{ fontSize: 15 }}>
+              <button className="btn-primary" style={{ fontSize: 16, pointerEvents: "auto" }} onClick={() => navigate("/register")}>
                 Get Started →
               </button>
-              <button className="btn-secondary" style={{ fontSize: 15 }}>
+              <button className="btn-secondary" style={{ fontSize: 16, pointerEvents: "auto" }} onClick={() => navigate("/learn-more")}>
                 Learn More
               </button>
             </div>
@@ -462,7 +534,8 @@ export default function MediLockerPage() {
                 width: 250,
                 height: 250,
                 borderRadius: "50%",
-                background: "var(--gradient-glow)",
+                background:
+                  "radial-gradient(circle, var(--accent-glow) 0%, transparent 70%)",
                 filter: "blur(30px)",
               }}
             />
@@ -477,8 +550,8 @@ export default function MediLockerPage() {
                 opacity: 0.06,
               }}
             >
-              <rect x="35" y="10" width="30" height="80" rx="4" fill="var(--accent-primary)" />
-              <rect x="10" y="35" width="80" height="30" rx="4" fill="var(--accent-primary)" />
+              <rect x="35" y="10" width="30" height="80" rx="4" fill="var(--accent)" />
+              <rect x="10" y="35" width="80" height="30" rx="4" fill="var(--accent)" />
             </svg>
 
             {/* Lock + Shield icon — centered, semi-transparent */}
@@ -489,19 +562,19 @@ export default function MediLockerPage() {
                 height: 110,
                 position: "relative",
                 zIndex: 2,
-                filter: "drop-shadow(0 0 20px var(--accent-primary-glow))",
+                filter: "drop-shadow(0 0 20px var(--accent-glow))",
               }}
             >
               {/* Shield shape */}
               <path
                 d="M40 5 L72 20 L72 50 C72 72 58 88 40 95 C22 88 8 72 8 50 L8 20 Z"
                 fill="none"
-                stroke="var(--border-accent)"
+                stroke="var(--accent-glow)"
                 strokeWidth="2"
               />
               <path
                 d="M40 10 L68 23 L68 50 C68 69 55 84 40 90 C25 84 12 69 12 50 L12 23 Z"
-                fill="var(--accent-primary-soft)"
+                fill="var(--accent-soft)"
               />
 
               {/* Lock body */}
@@ -511,7 +584,7 @@ export default function MediLockerPage() {
                 width="32"
                 height="26"
                 rx="4"
-                fill="var(--accent-primary-glow)"
+                fill="var(--accent-glow)"
                 stroke="var(--border-accent)"
                 strokeWidth="1.5"
               />
@@ -519,21 +592,21 @@ export default function MediLockerPage() {
               {/* Lock shackle */}
               <path
                 d="M30 45 L30 36 C30 28 35 24 40 24 C45 24 50 28 50 36 L50 45"
-                fill="none"
-                stroke="var(--border-accent)"
+                fill="var(--accent)"
+                stroke="var(--accent)"
                 strokeWidth="2"
                 strokeLinecap="round"
               />
 
               {/* Keyhole */}
-              <circle cx="40" cy="55" r="3.5" fill="var(--accent-primary)" />
+              <circle cx="40" cy="55" r="3.5" fill="var(--accent)" />
               <rect
                 x="38.5"
                 y="55"
                 width="3"
                 height="7"
                 rx="1.5"
-                fill="var(--accent-primary)"
+                fill="var(--accent)"
               />
             </svg>
 
@@ -549,8 +622,8 @@ export default function MediLockerPage() {
                 opacity: 0.15,
               }}
             >
-              <rect x="15" y="4" width="10" height="32" rx="3" fill="var(--accent-primary)" />
-              <rect x="4" y="15" width="32" height="10" rx="3" fill="var(--accent-primary)" />
+              <rect x="15" y="4" width="10" height="32" rx="3" fill="var(--accent)" />
+              <rect x="4" y="15" width="32" height="10" rx="3" fill="var(--accent)" />
             </svg>
 
             {/* Small medical cross accent — bottom left */}
@@ -565,8 +638,8 @@ export default function MediLockerPage() {
                 opacity: 0.1,
               }}
             >
-              <rect x="15" y="4" width="10" height="32" rx="3" fill="var(--accent-secondary)" />
-              <rect x="4" y="15" width="32" height="10" rx="3" fill="var(--accent-secondary)" />
+              <rect x="15" y="4" width="10" height="32" rx="3" fill="var(--eggplant)" />
+              <rect x="4" y="15" width="32" height="10" rx="3" fill="var(--eggplant)" />
             </svg>
 
             {/* Subtle heartbeat line */}
@@ -583,7 +656,7 @@ export default function MediLockerPage() {
               <polyline
                 points="0,20 40,20 50,20 60,5 70,35 80,15 90,25 100,20 200,20"
                 fill="none"
-                stroke="var(--accent-primary)"
+                stroke="var(--accent)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -685,7 +758,7 @@ export default function MediLockerPage() {
                   WebkitBackdropFilter: "blur(12px)",
                 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-primary)", letterSpacing: "0.1em", marginBottom: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--accent)", letterSpacing: "0.1em", marginBottom: 20 }}>
                   STEP {step.step}
                 </div>
                 <div style={{ marginBottom: 24 }}>{step.icon}</div>
@@ -698,7 +771,6 @@ export default function MediLockerPage() {
 
         {/* ── CARDS SECTION (flow layout — no overlap) ──── */}
         <section
-          id="cards-section"
           style={{
             position: "relative",
             maxWidth: 1280,
@@ -713,35 +785,18 @@ export default function MediLockerPage() {
               left: "50%",
               top: 0,
               bottom: 0,
+              width: 120,
               transform: "translateX(-50%)",
               zIndex: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
+              overflow: "hidden"
             }}
           >
             <div
               ref={lineRef}
               style={{
-                width: 4,
-                borderRadius: 4,
-                background: "var(--gradient-line)",
-                boxShadow:
-                  "0 0 20px var(--accent-primary-glow), 0 0 60px var(--accent-primary-soft)",
-                height: 0, /* animated by GSAP */
-              }}
-            />
-            <div
-              ref={spiralRef}
-              style={{
-                position: "absolute",
-                top: 0,
-                width: 20,
+                width: "100%",
                 height: "100%",
-                opacity: 0.6,
-                backgroundImage:
-                  "repeating-linear-gradient(120deg, var(--accent-primary) 0px, var(--accent-primary) 2px, transparent 2px, transparent 10px)",
-                backgroundSize: "20px 200px",
+                opacity: 0.8
               }}
             />
           </div>
@@ -897,12 +952,13 @@ export default function MediLockerPage() {
         {/* ── FOOTER ──────────────────────────────────── */}
         <footer
           style={{
-            padding: "48px 48px 32px",
-            background: "var(--glass-light)",
-            backdropFilter: "blur(16px)",
-            WebkitBackdropFilter: "blur(16px)",
-            borderTop: "none",
-            marginTop: 0,
+            padding: "80px 48px 40px",
+            background: "rgba(239, 250, 253, 0.85)",
+            backdropFilter: "blur(40px)",
+            WebkitBackdropFilter: "blur(40px)",
+            borderTop: "1px solid var(--border-subtle)",
+            position: "relative",
+            zIndex: 10,
           }}
         >
           <div
@@ -910,26 +966,48 @@ export default function MediLockerPage() {
               maxWidth: 1280,
               margin: "0 auto",
               display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
-              gap: 32,
+              gridTemplateColumns: "1.5fr 1fr 1fr 1fr",
+              gap: 60,
             }}
           >
+            <div>
+              <h2 style={{ 
+                fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700, 
+                color: "var(--eggplant)", marginBottom: 20 
+              }}>
+                MediLocker
+              </h2>
+              <p style={{ color: "var(--text-secondary)", fontSize: 15, lineHeight: 1.6, maxWidth: 300 }}>
+                Revolutionizing healthcare with secure, decentralized medical data sovereignty. Your health vault, anywhere in the world.
+              </p>
+            </div>
             {[
-              { title: "Terms", items: ["Privacy Policy", "Usage Rules"] },
-              { title: "Privacy", items: ["Data Protection", "Security Practices"] },
-              { title: "Contact", items: ["hello@medilocker.com", "+1 (800) MEDI-LOK"] },
+              { title: "Platform", items: [
+                { label: "Home", path: "/" },
+                { label: "Learn More", path: "/learn-more" },
+                { label: "Global Presence", path: "#" }
+              ]},
+              { title: "Legal", items: [
+                { label: "Privacy Policy", path: "#" },
+                { label: "Data Security", path: "#" },
+                { label: "Terms of Service", path: "#" }
+              ]},
+              { title: "Contact", items: [
+                { label: "Support", path: "#" },
+                { label: "Partnership", path: "#" },
+                { label: "Emergency", path: "#" }
+              ]}
             ].map((col) => (
               <div key={col.title}>
                 <h3
                   style={{
                     fontFamily: "var(--font-display)",
-                    fontSize: 13,
-                    fontWeight: 600,
+                    fontSize: 14,
+                    fontWeight: 700,
                     color: "var(--text-primary)",
-                    marginBottom: 14,
-                    marginTop: 0,
+                    marginBottom: 20,
                     textTransform: "uppercase",
-                    letterSpacing: "0.08em",
+                    letterSpacing: "0.1em",
                   }}
                 >
                   {col.title}
@@ -937,22 +1015,31 @@ export default function MediLockerPage() {
                 <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                   {col.items.map((item) => (
                     <li
-                      key={item}
+                      key={item.label}
                       style={{
                         color: "var(--text-secondary)",
                         fontSize: 14,
-                        marginBottom: 8,
+                        marginBottom: 12,
                         cursor: "pointer",
-                        transition: "color 0.2s",
+                        transition: "all 0.2s ease",
                       }}
-                      onMouseEnter={(e) =>
-                        (e.target.style.color = "var(--accent-primary)")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.target.style.color = "var(--text-secondary)")
-                      }
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (item.path.startsWith("/")) {
+                          navigate(item.path);
+                          window.scrollTo(0, 0);
+                        }
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.color = "var(--accent)";
+                        e.target.style.transform = "translateX(4px)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.color = "var(--text-secondary)";
+                        e.target.style.transform = "translateX(0)";
+                      }}
                     >
-                      {item}
+                      {item.label}
                     </li>
                   ))}
                 </ul>
@@ -960,27 +1047,22 @@ export default function MediLockerPage() {
             ))}
           </div>
 
-          {/* Copyright bar — clearly separated */}
           <div
             style={{
               height: 1,
-              background:
-                "linear-gradient(90deg, transparent, var(--border-default), transparent)",
-              margin: "40px 0 24px",
+              background: "linear-gradient(90deg, transparent, var(--border-default), transparent)",
+              margin: "60px 0 30px",
             }}
           />
 
-          <p
-            style={{
-              textAlign: "center",
-              color: "var(--text-muted)",
-              fontSize: 13,
-              fontFamily: "var(--font-mono)",
-              margin: 0,
-            }}
-          >
-            © 2026 MediLocker — All Rights Reserved
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <p style={{ color: "var(--text-muted)", fontSize: 13, fontFamily: "var(--font-mono)" }}>
+              © 2026 MediLocker — Empowering Patient Sovereignty
+            </p>
+            <div style={{ display: "flex", gap: 20 }}>
+              {/* Optional Social Icons */}
+            </div>
+          </div>
         </footer>
       </div>
     </>
