@@ -55,9 +55,10 @@ const Sidebar = ({ role }) => {
       display: "flex", flexDirection: "column", flexShrink: 0
     }}>
       <Link to="/" style={{ textDecoration: "none" }}>
-        <h2 className="gradient-text" style={{
+        <h2 style={{
           fontFamily: "var(--font-display)", fontSize: 20, fontWeight: 700,
-          letterSpacing: "0.05em", marginBottom: 32, paddingLeft: 8
+          letterSpacing: "0.05em", marginBottom: 32, paddingLeft: 8,
+          color: "var(--eggplant)"
         }}>
           MEDI LOCKER
         </h2>

@@ -1,9 +1,9 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatCard from "@/components/ui/StatCard"
 import StatusBadge from "@/components/ui/StatusBadge"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockRecords, mockAppointments, mockPrescriptions, mockConsents } from "@/data/mockData"
 import { FileText, Calendar, Pill, Shield, ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -14,21 +14,32 @@ const Dashboard = () => {
   const prescriptions = mockPrescriptions.filter(p => p.patient_id === "p1")
   const consents = mockConsents.filter(c => c.patient_id === "p1" && c.status === "active")
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  const statsRef = useRef(null)
+  const apptsRef = useRef(null)
+  const recordsRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      if (statsRef.current) cardStagger(".stats-card")
+      if (apptsRef.current) scrollReveal(apptsRef.current)
+      if (recordsRef.current) scrollReveal(recordsRef.current)
+    }, 100) 
+  }, [])
 
   return (
     <DashboardLayout>
       <PageHeader title="Patient Dashboard" description="Welcome back, Aarav Sharma" />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 32 }}>
-        <StatCard icon={FileText} label="Medical Records" value={records.length} color="var(--accent)" />
-        <StatCard icon={Calendar} label="Appointments" value={appointments.length} color="var(--violet)" />
-        <StatCard icon={Pill} label="Active Prescriptions" value={prescriptions.filter(p => p.is_active).length} color="var(--warning)" />
-        <StatCard icon={Shield} label="Active Consents" value={consents.length} color="var(--success)" />
+      <div ref={statsRef} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20, marginBottom: 32 }}>
+        <StatCard className="stats-card" icon={FileText} label="Medical Records" value={records.length} color="var(--accent)" />
+        <StatCard className="stats-card" icon={Calendar} label="Appointments" value={appointments.length} color="var(--violet)" />
+        <StatCard className="stats-card" icon={Pill} label="Active Prescriptions" value={prescriptions.filter(p => p.is_active).length} color="var(--warning)" />
+        <StatCard className="stats-card" icon={Shield} label="Active Consents" value={consents.length} color="var(--success)" />
       </div>
 
       {/* Recent Appointments */}
-      <div style={{ marginBottom: 32 }}>
+      <div ref={apptsRef} style={{ marginBottom: 32 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 18, fontWeight: 600 }}>Upcoming Appointments</h2>
           <Link to="/patient/appointments" style={{ color: "var(--accent)", fontSize: 13, textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>

@@ -19,59 +19,57 @@
 
 ## 2. Color System
 
-### 2.1 Core Palette (Dark-Mode-First)
+### 2.1 Core Palette (Light-Mode "Liquid Sky")
 
 ```css
 :root {
   /* ── Backgrounds ── */
-  --bg-base:       #020811;
-  --bg-surface:    #080F1E;
-  --bg-elevated:   #0D1628;
+  --bg-base:       #EFFAFD;    /* Pale Blue Baseline */
+  --bg-surface:    rgba(255, 255, 255, 0.45);
+  --bg-elevated:   rgba(255, 255, 255, 0.65);
 
   /* ── Glass ── */
-  --glass-light:   rgba(255,255,255,0.05);
-  --glass-medium:  rgba(255,255,255,0.08);
-  --glass-heavy:   rgba(255,255,255,0.12);
-  --glass-border:  rgba(255,255,255,0.10);
+  --glass-light:   rgba(255, 255, 255, 0.50);
+  --glass-medium:  rgba(255, 255, 255, 0.70);
+  --glass-heavy:   rgba(255, 255, 255, 0.85);
+  --glass-border:  rgba(255, 255, 255, 0.60);
 
-  /* ── Primary — Teal ── */
-  --accent:        #00E5C8;
-  --accent-dim:    #00B8A0;
-  --accent-glow:   rgba(0,229,200,0.20);
-  --accent-soft:   rgba(0,229,200,0.08);
+  /* ── Primary — Royal Blue ── */
+  --accent:        #4A8BDF;
+  --accent-dim:    #3574C5;
+  --accent-glow:   rgba(74, 139, 223, 0.20);
+  --accent-soft:   rgba(74, 139, 223, 0.08);
 
-  /* ── Secondary — Violet ── */
-  --violet:        #7B6FF0;
-  --violet-dim:    #5E55CC;
-  --violet-glow:   rgba(123,111,240,0.20);
+  /* ── Secondary — Eggplant ── */
+  --eggplant:      #A0006D;
+  --eggplant-dim:  #800057;
+  --eggplant-glow: rgba(160, 0, 109, 0.20);
 
   /* ── Semantic ── */
-  --success:       #10E87E;
-  --warning:       #F59E0B;
-  --error:         #EF4444;
-  --info:          #3B82F6;
+  --success:       #00A86B;    /* Deeper green for light mode */
+  --warning:       #D97706;    /* Deeper amber */
+  --error:         #DC2626;    /* Snappy red */
+  --info:          #4A8BDF;
 
   /* ── Text ── */
-  --text-primary:   #F0F4FF;
-  --text-secondary: #8B9BB8;
-  --text-muted:     #4C5A75;
+  --text-primary:   #0A1128;   /* Deep Navy for readability */
+  --text-secondary: #4A5568;   /* Cool Gray */
+  --text-muted:     #718096;
 
   /* ── Borders ── */
-  --border-subtle:  rgba(255,255,255,0.06);
-  --border-default: rgba(255,255,255,0.10);
-  --border-accent:  rgba(0,229,200,0.30);
+  --border-subtle:  rgba(74, 139, 223, 0.10);
+  --border-default: rgba(74, 139, 223, 0.20);
+  --border-accent:  rgba(74, 139, 223, 0.35);
 
   /* ── Gradients ── */
-  --gradient-hero:   linear-gradient(135deg, #020811, #080F1E, #0D1628);
-  --gradient-accent: linear-gradient(135deg, #00E5C8, #7B6FF0);
-  --gradient-card:   linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  --gradient-line:   linear-gradient(180deg, transparent, #00E5C8, #7B6FF0, transparent);
+  --gradient-sky:    linear-gradient(135deg, #EFFAFD, #E0F2F7);
+  --gradient-accent: linear-gradient(135deg, #4A8BDF, #A0006D);
+  --gradient-card:   linear-gradient(145deg, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
 
   /* ── Shadows ── */
-  --shadow-card:   0 4px 24px rgba(0,0,0,0.40);
-  --shadow-glow:   0 0 30px rgba(0,229,200,0.15);
-  --shadow-modal:  0 24px 64px rgba(0,0,0,0.70);
-  --shadow-button: 0 4px 16px rgba(0,229,200,0.30);
+  --shadow-card:   0 10px 30px rgba(74, 139, 223, 0.08);
+  --shadow-glow:   0 0 20px rgba(74, 139, 223, 0.15);
+  --shadow-modal:  0 30px 60px rgba(10, 17, 40, 0.12);
 }
 ```
 
@@ -81,19 +79,19 @@ Each dashboard uses a subtle accent tint to differentiate roles:
 
 | Role     | Accent Tint              | Sidebar Active BG                |
 |----------|--------------------------|----------------------------------|
-| Patient  | Teal `#00E5C8`           | `rgba(0,229,200,0.08)`          |
-| Doctor   | Violet `#7B6FF0`         | `rgba(123,111,240,0.08)`        |
-| Hospital | Blue `#3B82F6`           | `rgba(59,130,246,0.08)`         |
+| Patient  | Royal Blue `#4A8BDF`     | `rgba(74, 139, 223, 0.08)`      |
+| Doctor   | Eggplant `#A0006D`       | `rgba(160, 0, 109, 0.08)`        |
+| Hospital | Navy `#0A1128`           | `rgba(10, 17, 40, 0.08)`         |
 
 ### 2.3 Record Type Colors (left-edge stripe on cards)
 
 | Record Type    | Color     | CSS                  |
 |----------------|-----------|----------------------|
-| lab_report     | Violet    | `#7B6FF0`            |
-| prescription   | Warning   | `#F59E0B`            |
-| scan / imaging | Success   | `#10E87E`            |
-| discharge      | Info      | `#3B82F6`            |
-| other          | Teal      | `#00E5C8`            |
+| lab_report     | Eggplant  | `#A0006D`            |
+| prescription   | Warning   | `#D97706`            |
+| scan / imaging | Success   | `#00A86B`            |
+| discharge      | Royal     | `#4A8BDF`            |
+| other          | Navy      | `#0A1128`            |
 
 ### 2.4 Status Badge Colors
 
@@ -438,6 +436,32 @@ export const glowPulse = (el) => {
 // SIDEBAR HOVER micro-interaction
 export const sidebarHover    = (el) => gsap.to(el, { x:4, duration:0.2, ease:'power2.out' })
 export const sidebarHoverOut = (el) => gsap.to(el, { x:0, duration:0.2, ease:'power2.in' })
+```
+
+### 8.3 CSS-Based Infinite Scrolling Text
+
+For ambient elements or news tickers, we use an infinite linear CSS integration:
+
+```css
+@keyframes scroll-text-anim {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.scrolling-container {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.scrolling-text {
+  display: inline-block;
+  animation: scroll-text-anim 15s linear infinite;
+  font-family: var(--font-display);
+  font-weight: 700;
+}
 ```
 
 ### 8.3 Reduced Motion

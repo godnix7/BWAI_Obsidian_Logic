@@ -1,9 +1,9 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatCard from "@/components/ui/StatCard"
 import StatusBadge from "@/components/ui/StatusBadge"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockAppointments, mockPrescriptions, mockConsents } from "@/data/mockData"
 import { Calendar, Users, ClipboardPlus, Clock, ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
@@ -15,7 +15,15 @@ const Dashboard = () => {
   const patients = mockConsents.filter(c => c.grantee_user_id === "u2" && c.status === "active")
   const prescriptions = mockPrescriptions.filter(p => p.doctor_id === "d1")
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  const listRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger()
+      if (listRef.current) scrollReveal(listRef.current)
+    }, 100) 
+  }, [])
 
   return (
     <DashboardLayout>
@@ -34,7 +42,7 @@ const Dashboard = () => {
           View All <ArrowRight size={14} />
         </Link>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {pending.length === 0 && <p style={{ color: "var(--text-muted)", padding: 20 }}>No pending appointments</p>}
         {pending.map(apt => (
           <div key={apt.id} className="glass-card card" style={{ padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>

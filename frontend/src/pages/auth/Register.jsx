@@ -24,9 +24,14 @@ const Register = () => {
   return (
     <div style={{
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "linear-gradient(135deg, #020811 0%, #080F1E 40%, #0D1628 100%)", padding: 20
+      background: "var(--bg-base)",
+      backgroundImage: `
+        radial-gradient(at 0% 0%, rgba(74, 139, 223, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(160, 0, 109, 0.08) 0px, transparent 50%)
+      `,
+      padding: 24
     }}>
-      <div className="glass-elevated" style={{ width: 480, padding: 40 }}>
+      <div className="glass-card" style={{ width: 480, padding: 40, background: "rgba(255, 255, 255, 0.6)" }}>
         <h1 className="gradient-text" style={{
           fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700,
           textAlign: "center", marginBottom: 8

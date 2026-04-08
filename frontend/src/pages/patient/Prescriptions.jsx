@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatusBadge from "@/components/ui/StatusBadge"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockPrescriptions } from "@/data/mockData"
 import { Pill, ChevronDown, ChevronUp } from "lucide-react"
 import EmptyState from "@/components/ui/EmptyState"
@@ -11,7 +11,15 @@ const Prescriptions = () => {
   const [expanded, setExpanded] = useState(null)
   const prescriptions = mockPrescriptions.filter(p => p.patient_id === "p1")
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  const listRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger()
+      if (listRef.current) scrollReveal(listRef.current)
+    }, 100) 
+  }, [])
 
   return (
     <DashboardLayout>
@@ -20,7 +28,7 @@ const Prescriptions = () => {
       {prescriptions.length === 0 ? (
         <EmptyState icon={Pill} title="No prescriptions" description="Your prescriptions will appear here" />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {prescriptions.map(rx => (
             <div key={rx.id} className="glass-card card" style={{ padding: 20 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}

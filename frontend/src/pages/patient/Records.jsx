@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatusBadge from "@/components/ui/StatusBadge"
 import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockRecords } from "@/data/mockData"
 import { Upload, FileText, Eye, Download, Trash2, Search } from "lucide-react"
 
@@ -14,8 +14,16 @@ const Records = () => {
   const [search, setSearch] = useState("")
   const [uploadOpen, setUploadOpen] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(null)
+  
+  const gridRef = useRef(null)
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(".record-card"), 100) }, [])
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger(".record-card")
+      if (gridRef.current) scrollReveal(gridRef.current)
+    }, 100) 
+  }, [])
 
   const filtered = records.filter(r => {
     if (filter !== "all" && r.record_type !== filter) return false
@@ -52,15 +60,12 @@ const Records = () => {
       {filtered.length === 0 ? (
         <EmptyState icon={FileText} title="No records found" description="Upload your first medical record" />
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
+        <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 16 }}>
           {filtered.map(rec => (
-            <div key={rec.id} className="glass-card record-card" style={{
-              padding: 20, cursor: "pointer", transition: "transform 0.25s, border-color 0.25s, box-shadow 0.25s",
+            <div key={rec.id} className="glass-card record-card card" style={{
+              padding: 20, cursor: "pointer",
               borderLeft: `3px solid ${typeColors[rec.record_type] || "var(--accent)"}`
-            }}
-              onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "var(--shadow-card), var(--shadow-glow)" }}
-              onMouseLeave={e => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "" }}
-            >
+            }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                 <h3 style={{ fontWeight: 600, fontSize: 15 }}>{rec.title}</h3>
                 <StatusBadge status={rec.record_type} />

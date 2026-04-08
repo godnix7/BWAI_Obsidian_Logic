@@ -1,17 +1,26 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatusBadge from "@/components/ui/StatusBadge"
 import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockInsurance } from "@/data/mockData"
 import { ShieldCheck, Plus, Trash2 } from "lucide-react"
 
 const Insurance = () => {
   const [records, setRecords] = useState(mockInsurance)
   const [addOpen, setAddOpen] = useState(false)
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  
+  const gridRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger()
+      if (gridRef.current) scrollReveal(gridRef.current)
+    }, 100) 
+  }, [])
 
   const daysUntil = (date) => Math.ceil((new Date(date) - new Date()) / 86400000)
 
@@ -24,7 +33,7 @@ const Insurance = () => {
       {records.length === 0 ? (
         <EmptyState icon={ShieldCheck} title="No insurance records" description="Add your insurance policies" />
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 16 }}>
+        <div ref={gridRef} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 16 }}>
           {records.map(ins => {
             const expDays = daysUntil(ins.valid_until)
             return (

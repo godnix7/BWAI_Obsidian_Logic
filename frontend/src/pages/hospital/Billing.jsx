@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatusBadge from "@/components/ui/StatusBadge"
 import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockBilling, mockPatients } from "@/data/mockData"
 import { CreditCard, Plus, Trash2, Eye } from "lucide-react"
 
@@ -15,7 +15,15 @@ const Billing = () => {
   const [tab, setTab] = useState("all")
   const [services, setServices] = useState([{ name: "", quantity: 1, unit_price: 0 }])
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  const listRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger()
+      if (listRef.current) scrollReveal(listRef.current)
+    }, 100) 
+  }, [])
 
   const filtered = tab === "all" ? invoices : invoices.filter(i => i.status === tab)
   const addService = () => setServices(s => [...s, { name: "", quantity: 1, unit_price: 0 }])

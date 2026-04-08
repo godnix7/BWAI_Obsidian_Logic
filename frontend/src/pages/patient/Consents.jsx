@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatusBadge from "@/components/ui/StatusBadge"
 import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockConsents, mockDoctors } from "@/data/mockData"
 import { Shield, Plus, ShieldOff, Search } from "lucide-react"
 
@@ -14,7 +14,17 @@ const Consents = () => {
   const active = consents.filter(c => c.status === "active")
   const inactive = consents.filter(c => c.status !== "active")
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  const activeRef = useRef(null)
+  const inactiveRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger()
+      if (activeRef.current) scrollReveal(activeRef.current)
+      if (inactiveRef.current) scrollReveal(inactiveRef.current)
+    }, 100) 
+  }, [])
 
   const revoke = (id) => setConsents(cs => cs.map(c => c.id === id ? { ...c, status: "revoked", revoked_at: new Date().toISOString() } : c))
 
@@ -52,26 +62,28 @@ const Consents = () => {
         <button className="btn-primary" onClick={() => setGrantOpen(true)}><Plus size={16} /> Grant Access</button>
       </PageHeader>
 
-      <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--success)" }}>
-        🟢 Active Consents ({active.length})
-      </h3>
-      {active.length === 0 ? (
-        <EmptyState icon={Shield} title="No active consents" description="Grant access to a doctor or hospital" />
-      ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 12, marginBottom: 32 }}>
-          {active.map(c => <ConsentCard key={c.id} consent={c} />)}
-        </div>
-      )}
+      <div ref={activeRef}>
+        <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--success)" }}>
+          🟢 Active Consents ({active.length})
+        </h3>
+        {active.length === 0 ? (
+          <EmptyState icon={Shield} title="No active consents" description="Grant access to a doctor or hospital" />
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 12, marginBottom: 32 }}>
+            {active.map(c => <ConsentCard key={c.id} consent={c} />)}
+          </div>
+        )}
+      </div>
 
       {inactive.length > 0 && (
-        <>
+        <div ref={inactiveRef}>
           <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--text-muted)" }}>
             Revoked / Expired ({inactive.length})
           </h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(350px, 1fr))", gap: 12, opacity: 0.6 }}>
             {inactive.map(c => <ConsentCard key={c.id} consent={c} />)}
           </div>
-        </>
+        </div>
       )}
 
       {grantOpen && (

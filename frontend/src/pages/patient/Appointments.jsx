@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import StatusBadge from "@/components/ui/StatusBadge"
 import Modal from "@/components/ui/Modal"
 import EmptyState from "@/components/ui/EmptyState"
-import { pageEnter, cardStagger } from "@/utils/animations"
+import { pageEnter, cardStagger, scrollReveal } from "@/utils/animations"
 import { mockAppointments, mockDoctors } from "@/data/mockData"
 import { Calendar, Plus, Search } from "lucide-react"
 
@@ -13,7 +13,15 @@ const Appointments = () => {
   const [bookOpen, setBookOpen] = useState(false)
   const appointments = mockAppointments.filter(a => a.patient_id === "p1")
 
-  useEffect(() => { pageEnter(); setTimeout(() => cardStagger(), 100) }, [])
+  const listRef = useRef(null)
+
+  useEffect(() => { 
+    pageEnter(); 
+    setTimeout(() => {
+      cardStagger()
+      if (listRef.current) scrollReveal(listRef.current)
+    }, 100) 
+  }, [])
 
   const filtered = appointments.filter(a => {
     if (tab === "upcoming") return ["pending", "confirmed"].includes(a.status)
@@ -37,7 +45,7 @@ const Appointments = () => {
       {filtered.length === 0 ? (
         <EmptyState icon={Calendar} title="No appointments" description="Book your first appointment" />
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div ref={listRef} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {filtered.map(apt => (
             <div key={apt.id} className="glass-card card" style={{ padding: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ flex: 1 }}>
@@ -73,9 +81,7 @@ const Appointments = () => {
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
               {mockDoctors.map(doc => (
-                <div key={doc.id} className="glass-card" style={{ padding: 16, cursor: "pointer", transition: "border-color 0.2s" }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = "var(--border-accent)"}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = ""}>
+                <div key={doc.id} className="glass-card card" style={{ padding: 16, cursor: "pointer" }}>
                   <p style={{ fontWeight: 600, fontSize: 14 }}>{doc.full_name}</p>
                   <p style={{ color: "var(--text-secondary)", fontSize: 12 }}>{doc.specialization}</p>
                   <p style={{ color: "var(--accent)", fontSize: 12, marginTop: 4 }}>₹{doc.consultation_fee}</p>
