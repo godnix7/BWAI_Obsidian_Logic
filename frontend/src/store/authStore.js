@@ -1,7 +1,29 @@
 import { create } from "zustand"
 
+const getUserFromStorage = () => {
+  try {
+    const stored = localStorage.getItem("medilocker_user");
+    if (!stored) return null;
+    
+    // Attempt parsing
+    const parsed = JSON.parse(stored);
+    
+    // Ensure it's a valid object with a role to prevent infinite redirect loops
+    if (parsed && typeof parsed === 'object' && parsed.role) {
+      return parsed;
+    }
+    
+    // If malformed, clear it
+    localStorage.removeItem("medilocker_user");
+    return null;
+  } catch (e) {
+    localStorage.removeItem("medilocker_user");
+    return null;
+  }
+};
+
 export const useAuthStore = create((set) => ({
-  user: JSON.parse(localStorage.getItem("medilocker_user")) || null,
+  user: getUserFromStorage(),
   token: localStorage.getItem("medilocker_token") || null,
 
   setAuth: (data) => {

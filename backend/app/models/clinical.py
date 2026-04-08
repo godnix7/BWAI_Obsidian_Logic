@@ -1,6 +1,7 @@
 from sqlalchemy import Column, String, Date, Time, Integer, Boolean, Text, ForeignKey, Enum, text, DateTime
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship as sa_relationship
 import enum
 from app.db.base_class import Base
 
@@ -32,6 +33,10 @@ class Appointment(Base):
     type = Column(Enum(AppointmentType), nullable=False)
     rejection_reason = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    patient = sa_relationship("PatientProfile", lazy="joined")
+    doctor = sa_relationship("DoctorProfile", lazy="joined")
 
 class DoctorSchedule(Base):
     __tablename__ = "doctor_schedules"

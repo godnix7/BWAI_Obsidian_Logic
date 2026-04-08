@@ -26,3 +26,7 @@ class User(Base):
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), onupdate=datetime.utcnow)
     last_login = Column(DateTime(timezone=True), nullable=True)
+
+    patient_profile = relationship("PatientProfile", back_populates="user", uselist=False)
+    doctor_profile = relationship("DoctorProfile", back_populates="user", uselist=False)
+    hospital_profile = relationship("HospitalProfile", back_populates="user", uselist=False)

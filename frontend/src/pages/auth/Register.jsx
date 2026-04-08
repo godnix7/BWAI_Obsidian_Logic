@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { UserPlus } from "lucide-react"
+import { UserPlus, Loader2 } from "lucide-react"
+import { registerApi } from "@/api/auth.api"
 
 const roleTabs = ["patient", "doctor", "hospital"]
 
@@ -9,16 +10,49 @@ const Register = () => {
   const [form, setForm] = useState({ email: "", password: "", confirm: "", full_name: "", phone: "" })
   const [extra, setExtra] = useState({ license_number: "", specialization: "", registration_number: "", hospital_name: "" })
   const [success, setSuccess] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const navigate = useNavigate()
 
   const update = (key, val) => setForm(p => ({ ...p, [key]: val }))
   const updateExtra = (key, val) => setExtra(p => ({ ...p, [key]: val }))
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault()
-    // Mock — just show success
-    setSuccess(true)
-    setTimeout(() => navigate("/login"), 2000)
+    setError("")
+
+    if (form.password !== form.confirm) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters long")
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Build request body per RegisterRequest schema requirements
+      const requestData = {
+        email: form.email,
+        password: form.password,
+        phone: form.phone || undefined,
+        role: role
+      }
+
+      await registerApi(requestData)
+      setSuccess(true)
+      setTimeout(() => navigate("/login"), 2500)
+    } catch (err) {
+      if (err.response && err.response.data && err.response.data.detail) {
+        setError(err.response.data.detail)
+      } else {
+        setError("Network error. Could not connect to the server.")
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -94,8 +128,11 @@ const Register = () => {
               </div>
             )}
 
-            <button type="submit" className="btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: 8 }}>
-              <UserPlus size={16} /> Create Account
+            {error && <p style={{ color: "var(--error)", fontSize: 13, marginBottom: 12 }}>{error}</p>}
+
+            <button type="submit" className="btn-primary" style={{ width: "100%", justifyContent: "center", marginTop: 8 }} disabled={loading}>
+              {loading ? <Loader2 className="animate-spin" size={16} /> : <UserPlus size={16} />}
+              {loading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
         )}

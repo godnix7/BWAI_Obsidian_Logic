@@ -1,0 +1,1226 @@
+﻿2026-04-08 19:23:27,619 INFO sqlalchemy.engine.Engine select pg_catalog.version()
+2026-04-08 19:23:27,619 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-04-08 19:23:27,620 INFO sqlalchemy.engine.Engine select current_schema()
+2026-04-08 19:23:27,621 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-04-08 19:23:27,622 INFO sqlalchemy.engine.Engine show standard_conforming_strings
+2026-04-08 19:23:27,622 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-04-08 19:23:27,623 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-04-08 19:23:27,645 INFO sqlalchemy.engine.Engine SELECT users.id, users.email, users.phone, users.password_hash, users.role, users.is_active, users.is_verified, users.created_at, users.updated_at, users.last_login 
+FROM users 
+WHERE users.email = $1::VARCHAR
+2026-04-08 19:23:27,645 INFO sqlalchemy.engine.Engine [generated in 0.00015s] ('final_fixed_test_2@medilocker.com',)
+2026-04-08 19:23:27,861 INFO sqlalchemy.engine.Engine INSERT INTO users (id, email, phone, password_hash, role, is_active, is_verified, created_at, updated_at, last_login) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::userrole, $6::BOOLEAN, $7::BOOLEAN, $8::TIMESTAMP WITH TIME ZONE, $9::TIMESTAMP WITH TIME ZONE, $10::TIMESTAMP WITH TIME ZONE)
+2026-04-08 19:23:27,861 INFO sqlalchemy.engine.Engine [generated in 0.00026s] (UUID('066d894e-a8c2-4300-95b6-6471dacca0e0'), 'final_fixed_test_2@medilocker.com', None, '$2b$12$34gcXNBnBSuqaAiJ7U/oQuGHK9uR33NYQyy8p/lm4MpjprVnR0lfW', 'patient', True, False, datetime.datetime(2026, 4, 8, 13, 53, 27, 860971), None, None)
+2026-04-08 19:23:27,864 INFO sqlalchemy.engine.Engine ROLLBACK
+uv : Traceback (most 
+recent call last):
+At line:1 char:1
++ uv run python 
+test_register.py 2>&1 | 
+Out-File -Encoding utf8 
+test_re ...
++ ~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
+    + CategoryInfo      
+        : NotSpecified: 
+(T    raceback (most 
+recent     call 
+last)::String)     [], 
+RemoteException
+    + 
+FullyQualifiedError    
+Id : NativeCommandErr   
+ or
+ 
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 550, in 
+_prepare_and_execute
+    self._rows = 
+deque(await prepared_stm
+t.fetch(*parameters))
+                       ^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\asyncpg\prepared_stm
+t.py", line 177, in 
+fetch
+    data = await self.__
+bind_execute(args, 0, 
+timeout)
+           ^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\asyncpg\prepared_stm
+t.py", line 268, in 
+__bind_execute
+    data, status, _ = 
+await self.__do_execute(
+                      
+^^^^^^^^^^^^^^^^^^^^^^^^
+        lambda 
+protocol: 
+protocol.bind_execute(
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+            
+self._state, args, '', 
+limit, True, timeout))
+            ^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\asyncpg\prepared_stm
+t.py", line 257, in 
+__do_execute
+    return await 
+executor(protocol)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol
+/protocol.pyx", line 
+205, in bind_execute
+asyncpg.exceptions.Inval
+idTextRepresentationErro
+r: invalid input value 
+for enum userrole: 
+"patient"
+
+The above exception was 
+the direct cause of the 
+following exception:
+
+Traceback (most recent 
+call last):
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1967, in 
+_exec_single_context
+    
+self.dialect.do_execute(
+    
+~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, 
+str_statement, 
+effective_parameters, 
+context
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\de
+fault.py", line 952, in 
+do_execute
+    cursor.execute(state
+ment, parameters)
+    ~~~~~~~~~~~~~~^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 585, in execute
+    self._adapt_connecti
+on.await_(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~^
+        self._prepare_an
+d_execute(operation, 
+parameters)
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+132, in await_only
+    return current.paren
+t.switch(awaitable)  # 
+type: ignore[no-any-retu
+rn,attr-defined] # 
+noqa: E501
+           ~~~~~~~~~~~~~
+~~~~~~~~^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 563, in 
+_prepare_and_execute
+    self._handle_excepti
+on(error)
+    ~~~~~~~~~~~~~~~~~~~~
+~~^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 513, in 
+_handle_exception
+    self._adapt_connecti
+on._handle_exception(err
+or)
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~^^^^
+^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 797, in 
+_handle_exception
+    raise 
+translated_error from 
+error
+sqlalchemy.dialects.post
+gresql.asyncpg.AsyncAdap
+t_asyncpg_dbapi.Error: 
+<class 'asyncpg.exceptio
+ns.InvalidTextRepresenta
+tionError'>: invalid 
+input value for enum 
+userrole: "patient"
+
+The above exception was 
+the direct cause of the 
+following exception:
+
+Traceback (most recent 
+call last):
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\app\services\auth_se
+rvice.py", line 35, in 
+register_user
+    await db.commit()
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\ext\async
+io\session.py", line 
+1000, in commit
+    await greenlet_spawn
+(self.sync_session.commi
+t)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+203, in greenlet_spawn
+    result = 
+context.switch(value)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 2030, in 
+commit
+    trans.commit(_to_roo
+t=True)
+    ~~~~~~~~~~~~^^^^^^^^
+^^^^^^^
+  File "<string>", line 
+2, in commit
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\state
+_changes.py", line 137, 
+in _go
+    ret_value = 
+fn(self, *arg, **kw)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 1311, in 
+commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 
+2, in _prepare_impl
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\state
+_changes.py", line 137, 
+in _go
+    ret_value = 
+fn(self, *arg, **kw)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 1286, in 
+_prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 4331, in 
+flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 4466, in 
+_flush
+    with 
+util.safe_reraise():
+         
+~~~~~~~~~~~~~~~~~^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\lang
+helpers.py", line 121, 
+in __exit__
+    raise exc_value.with
+_traceback(exc_tb)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 4427, in 
+_flush
+    
+flush_context.execute()
+    
+~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\unito
+fwork.py", line 466, in 
+execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\unito
+fwork.py", line 642, in 
+execute
+    util.preloaded.orm_p
+ersistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_m
+apper_hierarchy(self.map
+per, False, False),
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\persi
+stence.py", line 93, in 
+save_obj
+    
+_emit_insert_statements(
+    
+~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\persi
+stence.py", line 1233, 
+in 
+_emit_insert_statements
+    result = 
+connection.execute(
+        statement,
+        params,
+        execution_option
+s=execution_options,
+    )
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1419, in 
+execute
+    return meth(
+        self,
+        
+distilled_parameters,
+        
+execution_options or 
+NO_OPTIONS,
+    )
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\sql\eleme
+nts.py", line 527, in 
+_execute_on_connection
+    return connection._e
+xecute_clauseelement(
+           ~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~^
+        self, 
+distilled_params, 
+execution_options
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1641, in 
+_execute_clauseelement
+    ret = 
+self._execute_context(
+        dialect,
+    ...<8 lines>...
+        
+cache_hit=cache_hit,
+    )
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1846, in 
+_execute_context
+    return self._exec_si
+ngle_context(
+           ~~~~~~~~~~~~~
+~~~~~~~~~~~~^
+        dialect, 
+context, statement, 
+parameters
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1986, in 
+_exec_single_context
+    self._handle_dbapi_e
+xception(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~^
+        e, 
+str_statement, 
+effective_parameters, 
+cursor, context
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 2363, in 
+_handle_dbapi_exception
+    raise sqlalchemy_exc
+eption.with_traceback(ex
+c_info[2]) from e
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1967, in 
+_exec_single_context
+    
+self.dialect.do_execute(
+    
+~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, 
+str_statement, 
+effective_parameters, 
+context
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\de
+fault.py", line 952, in 
+do_execute
+    cursor.execute(state
+ment, parameters)
+    ~~~~~~~~~~~~~~^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 585, in execute
+    self._adapt_connecti
+on.await_(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~^
+        self._prepare_an
+d_execute(operation, 
+parameters)
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+132, in await_only
+    return current.paren
+t.switch(awaitable)  # 
+type: ignore[no-any-retu
+rn,attr-defined] # 
+noqa: E501
+           ~~~~~~~~~~~~~
+~~~~~~~~^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 563, in 
+_prepare_and_execute
+    self._handle_excepti
+on(error)
+    ~~~~~~~~~~~~~~~~~~~~
+~~^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 513, in 
+_handle_exception
+    self._adapt_connecti
+on._handle_exception(err
+or)
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~^^^^
+^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 797, in 
+_handle_exception
+    raise 
+translated_error from 
+error
+sqlalchemy.exc.DBAPIErro
+r: (sqlalchemy.dialects.
+postgresql.asyncpg.Error
+) <class 'asyncpg.except
+ions.InvalidTextRepresen
+tationError'>: invalid 
+input value for enum 
+userrole: "patient"
+[SQL: INSERT INTO users 
+(id, email, phone, 
+password_hash, role, 
+is_active, is_verified, 
+created_at, updated_at, 
+last_login) VALUES 
+($1::UUID, $2::VARCHAR, 
+$3::VARCHAR, 
+$4::VARCHAR, 
+$5::userrole, 
+$6::BOOLEAN, 
+$7::BOOLEAN, 
+$8::TIMESTAMP WITH TIME 
+ZONE, $9::TIMESTAMP 
+WITH TIME ZONE, 
+$10::TIMESTAMP WITH 
+TIME ZONE)]
+[parameters: (UUID('066d
+894e-a8c2-4300-95b6-6471
+dacca0e0'), 'final_fixed
+_test_2@medilocker.com',
+ None, '$2b$12$34gcXNBnB
+SuqaAiJ7U/oQuGHK9uR33NYQ
+yy8p/lm4MpjprVnR0lfW', 
+'patient', True, False, 
+datetime.datetime(2026, 
+4, 8, 13, 53, 27, 
+860971), None, None)]
+(Background on this 
+error at: https://sqlalc
+he.me/e/20/dbapi)
+Traceback (most recent 
+call last):
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 550, in 
+_prepare_and_execute
+    self._rows = 
+deque(await prepared_stm
+t.fetch(*parameters))
+                       ^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\asyncpg\prepared_stm
+t.py", line 177, in 
+fetch
+    data = await self.__
+bind_execute(args, 0, 
+timeout)
+           ^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\asyncpg\prepared_stm
+t.py", line 268, in 
+__bind_execute
+    data, status, _ = 
+await self.__do_execute(
+                      
+^^^^^^^^^^^^^^^^^^^^^^^^
+        lambda 
+protocol: 
+protocol.bind_execute(
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+            
+self._state, args, '', 
+limit, True, timeout))
+            ^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\asyncpg\prepared_stm
+t.py", line 257, in 
+__do_execute
+    return await 
+executor(protocol)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^
+  File "asyncpg/protocol
+/protocol.pyx", line 
+205, in bind_execute
+asyncpg.exceptions.Inval
+idTextRepresentationErro
+r: invalid input value 
+for enum userrole: 
+"patient"
+
+The above exception was 
+the direct cause of the 
+following exception:
+
+Traceback (most recent 
+call last):
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1967, in 
+_exec_single_context
+    
+self.dialect.do_execute(
+    
+~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, 
+str_statement, 
+effective_parameters, 
+context
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\de
+fault.py", line 952, in 
+do_execute
+    cursor.execute(state
+ment, parameters)
+    ~~~~~~~~~~~~~~^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 585, in execute
+    self._adapt_connecti
+on.await_(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~^
+        self._prepare_an
+d_execute(operation, 
+parameters)
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+132, in await_only
+    return current.paren
+t.switch(awaitable)  # 
+type: ignore[no-any-retu
+rn,attr-defined] # 
+noqa: E501
+           ~~~~~~~~~~~~~
+~~~~~~~~^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 563, in 
+_prepare_and_execute
+    self._handle_excepti
+on(error)
+    ~~~~~~~~~~~~~~~~~~~~
+~~^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 513, in 
+_handle_exception
+    self._adapt_connecti
+on._handle_exception(err
+or)
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~^^^^
+^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 797, in 
+_handle_exception
+    raise 
+translated_error from 
+error
+sqlalchemy.dialects.post
+gresql.asyncpg.AsyncAdap
+t_asyncpg_dbapi.Error: 
+<class 'asyncpg.exceptio
+ns.InvalidTextRepresenta
+tionError'>: invalid 
+input value for enum 
+userrole: "patient"
+
+The above exception was 
+the direct cause of the 
+following exception:
+
+Traceback (most recent 
+call last):
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\test_register.py", 
+line 16, in 
+test_register
+    user = await 
+register_user(db, data)
+           ^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\app\services\auth_se
+rvice.py", line 39, in 
+register_user
+    raise e
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\app\services\auth_se
+rvice.py", line 35, in 
+register_user
+    await db.commit()
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\ext\async
+io\session.py", line 
+1000, in commit
+    await greenlet_spawn
+(self.sync_session.commi
+t)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+203, in greenlet_spawn
+    result = 
+context.switch(value)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 2030, in 
+commit
+    trans.commit(_to_roo
+t=True)
+    ~~~~~~~~~~~~^^^^^^^^
+^^^^^^^
+  File "<string>", line 
+2, in commit
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\state
+_changes.py", line 137, 
+in _go
+    ret_value = 
+fn(self, *arg, **kw)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 1311, in 
+commit
+    self._prepare_impl()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "<string>", line 
+2, in _prepare_impl
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\state
+_changes.py", line 137, 
+in _go
+    ret_value = 
+fn(self, *arg, **kw)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 1286, in 
+_prepare_impl
+    self.session.flush()
+    ~~~~~~~~~~~~~~~~~~^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 4331, in 
+flush
+    self._flush(objects)
+    ~~~~~~~~~~~^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 4466, in 
+_flush
+    with 
+util.safe_reraise():
+         
+~~~~~~~~~~~~~~~~~^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\lang
+helpers.py", line 121, 
+in __exit__
+    raise exc_value.with
+_traceback(exc_tb)
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\sessi
+on.py", line 4427, in 
+_flush
+    
+flush_context.execute()
+    
+~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\unito
+fwork.py", line 466, in 
+execute
+    rec.execute(self)
+    ~~~~~~~~~~~^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\unito
+fwork.py", line 642, in 
+execute
+    util.preloaded.orm_p
+ersistence.save_obj(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~^
+        self.mapper,
+        ^^^^^^^^^^^^
+        uow.states_for_m
+apper_hierarchy(self.map
+per, False, False),
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+        uow,
+        ^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\persi
+stence.py", line 93, in 
+save_obj
+    
+_emit_insert_statements(
+    
+~~~~~~~~~~~~~~~~~~~~~~~^
+        base_mapper,
+        ^^^^^^^^^^^^
+    ...<3 lines>...
+        insert,
+        ^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\orm\persi
+stence.py", line 1233, 
+in 
+_emit_insert_statements
+CATASTROPHIC REGISTRATION ERROR:
+FAILED: (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.InvalidTextRepresentationError'>: invalid input value for enum userrole: "patient"
+[SQL: INSERT INTO users (id, email, phone, password_hash, role, is_active, is_verified, created_at, updated_at, last_login) VALUES ($1::UUID, $2::VARCHAR, $3::VARCHAR, $4::VARCHAR, $5::userrole, $6::BOOLEAN, $7::BOOLEAN, $8::TIMESTAMP WITH TIME ZONE, $9::TIMESTAMP WITH TIME ZONE, $10::TIMESTAMP WITH TIME ZONE)]
+[parameters: (UUID('066d894e-a8c2-4300-95b6-6471dacca0e0'), 'final_fixed_test_2@medilocker.com', None, '$2b$12$34gcXNBnBSuqaAiJ7U/oQuGHK9uR33NYQyy8p/lm4MpjprVnR0lfW', 'patient', True, False, datetime.datetime(2026, 4, 8, 13, 53, 27, 860971), None, None)]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+    result = 
+connection.execute(
+        statement,
+        params,
+        execution_option
+s=execution_options,
+    )
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1419, in 
+execute
+    return meth(
+        self,
+        
+distilled_parameters,
+        
+execution_options or 
+NO_OPTIONS,
+    )
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\sql\eleme
+nts.py", line 527, in 
+_execute_on_connection
+    return connection._e
+xecute_clauseelement(
+           ~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~^
+        self, 
+distilled_params, 
+execution_options
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1641, in 
+_execute_clauseelement
+    ret = 
+self._execute_context(
+        dialect,
+    ...<8 lines>...
+        
+cache_hit=cache_hit,
+    )
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1846, in 
+_execute_context
+    return self._exec_si
+ngle_context(
+           ~~~~~~~~~~~~~
+~~~~~~~~~~~~^
+        dialect, 
+context, statement, 
+parameters
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1986, in 
+_exec_single_context
+    self._handle_dbapi_e
+xception(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~^
+        e, 
+str_statement, 
+effective_parameters, 
+cursor, context
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 2363, in 
+_handle_dbapi_exception
+    raise sqlalchemy_exc
+eption.with_traceback(ex
+c_info[2]) from e
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\ba
+se.py", line 1967, in 
+_exec_single_context
+    
+self.dialect.do_execute(
+    
+~~~~~~~~~~~~~~~~~~~~~~~^
+        cursor, 
+str_statement, 
+effective_parameters, 
+context
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\engine\de
+fault.py", line 952, in 
+do_execute
+    cursor.execute(state
+ment, parameters)
+    ~~~~~~~~~~~~~~^^^^^^
+^^^^^^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 585, in execute
+    self._adapt_connecti
+on.await_(
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~^
+        self._prepare_an
+d_execute(operation, 
+parameters)
+        ^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+    )
+    ^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+132, in await_only
+    return current.paren
+t.switch(awaitable)  # 
+type: ignore[no-any-retu
+rn,attr-defined] # 
+noqa: E501
+           ~~~~~~~~~~~~~
+~~~~~~~~^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\util\_con
+currency_py3k.py", line 
+196, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 563, in 
+_prepare_and_execute
+    self._handle_excepti
+on(error)
+    ~~~~~~~~~~~~~~~~~~~~
+~~^^^^^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 513, in 
+_handle_exception
+    self._adapt_connecti
+on._handle_exception(err
+or)
+    ~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~^^^^
+^^^
+  File "C:\Nischay\PROJE
+CTS\BWAI\medilocker\back
+end\.venv\Lib\site-packa
+ges\sqlalchemy\dialects\
+postgresql\asyncpg.py", 
+line 797, in 
+_handle_exception
+    raise 
+translated_error from 
+error
+sqlalchemy.exc.DBAPIErro
+r: (sqlalchemy.dialects.
+postgresql.asyncpg.Error
+) <class 'asyncpg.except
+ions.InvalidTextRepresen
+tationError'>: invalid 
+input value for enum 
+userrole: "patient"
+[SQL: INSERT INTO users 
+(id, email, phone, 
+password_hash, role, 
+is_active, is_verified, 
+created_at, updated_at, 
+last_login) VALUES 
+($1::UUID, $2::VARCHAR, 
+$3::VARCHAR, 
+$4::VARCHAR, 
+$5::userrole, 
+$6::BOOLEAN, 
+$7::BOOLEAN, 
+$8::TIMESTAMP WITH TIME 
+ZONE, $9::TIMESTAMP 
+WITH TIME ZONE, 
+$10::TIMESTAMP WITH 
+TIME ZONE)]
+[parameters: (UUID('066d
+894e-a8c2-4300-95b6-6471
+dacca0e0'), 'final_fixed
+_test_2@medilocker.com',
+ None, '$2b$12$34gcXNBnB
+SuqaAiJ7U/oQuGHK9uR33NYQ
+yy8p/lm4MpjprVnR0lfW', 
+'patient', True, False, 
+datetime.datetime(2026, 
+4, 8, 13, 53, 27, 
+860971), None, None)]
+(Background on this 
+error at: https://sqlalc
+he.me/e/20/dbapi)

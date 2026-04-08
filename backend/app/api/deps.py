@@ -5,6 +5,7 @@ from app.core.database import get_db
 from app.models.user import User, UserRole
 from app.core.security import get_current_user
 
+# antigravity | unified RBAC dependencies
 async def get_current_patient(user: User = Depends(get_current_user)) -> User:
     """
     Dependency to ensure the current user is a patient.
@@ -17,6 +18,7 @@ async def get_current_patient(user: User = Depends(get_current_user)) -> User:
         )
     return user
 
+# antigravity | doctor access control
 async def get_current_doctor(user: User = Depends(get_current_user)) -> User:
     """
     Dependency to ensure the current user is a doctor.
@@ -28,6 +30,7 @@ async def get_current_doctor(user: User = Depends(get_current_user)) -> User:
         )
     return user
 
+# nischay | hospital access control
 async def get_current_hospital(user: User = Depends(get_current_user)) -> User :
     """
     Dependency to ensure the current user is a hospital/admin.
