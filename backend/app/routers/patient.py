@@ -119,3 +119,65 @@ async def add_family_member(
     await db.commit()
     await db.refresh(new_member)
     return new_member
+
+@router.put("/family/{member_id}", response_model=FamilyMemberRead)
+async def update_family_member(
+    member_id: UUID,
+    member_data: FamilyMemberCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    Update a family member's details.
+    """
+    res = await db.execute(
+        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
+    )
+    patient_id = res.scalars().first()
+    
+    result = await db.execute(
+        select(FamilyMember).where(
+            FamilyMember.id == member_id, 
+            FamilyMember.patient_id == patient_id
+        )
+    )
+    member = result.scalars().first()
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Family member not found.")
+        
+    for field, value in member_data.model_dump().items():
+        setattr(member, field, value)
+        
+    await db.commit()
+    await db.refresh(member)
+    return member
+
+@router.delete("/family/{member_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_family_member(
+    member_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    Delete a family member from the record.
+    """
+    res = await db.execute(
+        select(PatientProfile.id).where(PatientProfile.user_id == current_user.id)
+    )
+    patient_id = res.scalars().first()
+    
+    result = await db.execute(
+        select(FamilyMember).where(
+            FamilyMember.id == member_id, 
+            FamilyMember.patient_id == patient_id
+        )
+    )
+    member = result.scalars().first()
+    
+    if not member:
+        raise HTTPException(status_code=404, detail="Family member not found.")
+        
+    await db.delete(member)
+    await db.commit()
+    return None

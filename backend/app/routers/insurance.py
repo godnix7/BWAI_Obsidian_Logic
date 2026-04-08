@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-from uuid import UUID
+from uuid import UUID, uuid4
+import shutil
+import os
 
 from app.api.deps import get_db, get_current_patient
 from app.models.user import User
@@ -105,6 +107,44 @@ async def delete_insurance(
     await db.delete(ins)
     await db.commit()
     return None
+
+@router.post("/{id}/upload", response_model=InsuranceRead)
+async def upload_insurance_document(
+    id: UUID,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_patient)
+):
+    """
+    Upload a policy document for an insurance record.
+    """
+    result = await db.execute(
+        select(InsuranceRecord).where(InsuranceRecord.id == id)
+    )
+    ins = result.scalars().first()
+    
+    if not ins:
+        raise HTTPException(status_code=404, detail="Insurance record not found.")
+
+    # 1. Unique filename
+    file_id = str(uuid4())
+    _, ext = os.path.splitext(file.filename)
+    unique_filename = f"ins_{file_id}{ext}"
+    
+    # 2. Save physical file
+    storage_path = os.path.join("static", "records", unique_filename)
+    try:
+        with open(storage_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=f"Could not save document: {str(e)}")
+    
+    # 3. Update DB
+    ins.document_url = f"/static/records/{unique_filename}"
+    
+    await db.commit()
+    await db.refresh(ins)
+    return ins
 
 @router.get("/{id}/document")
 async def get_insurance_document_url(
