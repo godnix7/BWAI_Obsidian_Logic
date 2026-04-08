@@ -4,18 +4,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from fastapi import HTTPException, status
 
-import uuid
-import traceback
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from fastapi import HTTPException, status
-
 from app.models.user import User
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
 from app.core.config import settings
 from app.core.redis import redis_client
 
-# nischay | user registration base
+# nischay | user registration base with improved error handling
 async def register_user(db: AsyncSession, data) -> User:
     from sqlalchemy.exc import IntegrityError
     from app.models.profile import PatientProfile, DoctorProfile, HospitalProfile
@@ -103,6 +97,7 @@ async def login_user(db: AsyncSession, email: str, password: str):
 
     # 1. Find user by email
     result = await db.execute(select(User).where(User.email == email))
+    user = result.scalars().first()
     
     # 2. Verify password and active status
     if not user or not verify_password(password, user.password_hash):
