@@ -1,16 +1,20 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+# Use node:20-slim (Debian/glibc) NOT alpine (musl) to avoid native module
+# binary mismatches with packages like lightningcss, esbuild, etc.
+FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files first (layer caching)
 COPY package.json package-lock.json* ./
 
-# Use npm install instead of npm ci to regenerate lock if needed
+# Install all dependencies fresh (node_modules excluded via .dockerignore)
 RUN npm install
 
-# Copy source and build
+# Copy source code (node_modules excluded via .dockerignore)
 COPY . .
+
+# Build production bundle
 RUN npm run build
 
 # Stage 2: Serve with nginx

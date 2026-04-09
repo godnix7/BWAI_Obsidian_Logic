@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import field_validator
 from typing import List, Optional
 
 # nischay | base settings structure
@@ -10,6 +11,20 @@ class Settings(BaseSettings):
     # antigravity | unified db urls
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/medilocker"
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
+
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_database_url(cls, v: str) -> str:
+        """Ensure DATABASE_URL always uses the asyncpg driver.
+        Railway injects postgres:// or postgresql:// — we force +asyncpg.
+        """
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql+psycopg2://"):
+            v = v.replace("postgresql+psycopg2://", "postgresql+asyncpg://", 1)
+        return v
 
     # antigravity | unified jwt configuration
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
