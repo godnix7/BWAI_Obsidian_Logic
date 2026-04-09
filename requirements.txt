@@ -1,1 +1,18 @@
--r backend/requirements.txt
+alembic>=1.13.1
+asyncpg>=0.29.0
+boto3>=1.42.85
+cryptography>=46.0.7
+email-validator>=2.3.0
+fastapi>=0.109.0
+fastapi-mail>=1.6.2
+httpx>=0.28.1
+passlib[bcrypt]>=1.7.4
+pillow>=12.2.0
+pydantic-settings>=2.1.0
+pyjwt>=2.8.0
+python-jose[cryptography]>=3.5.0
+python-multipart>=0.0.6
+qrcode[pil]>=8.2
+redis>=5.0.1
+sqlalchemy>=2.0.25
+uvicorn[standard]>=0.27.0
