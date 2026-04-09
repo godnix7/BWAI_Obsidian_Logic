@@ -2,10 +2,9 @@ import { useEffect, useRef, useState } from "react"
 import DashboardLayout from "@/Layouts/DashboardLayout"
 import PageHeader from "@/components/ui/PageHeader"
 import { resolveEmergencyQR } from "@/api/Hospital.api"
+import { API_ORIGIN } from "@/config"
 import { AlertCircle, Camera, Loader2, QrCode, Search, ShieldAlert, Upload, XCircle } from "lucide-react"
 import jsQR from "jsqr"
-
-const API_BASE = `http://${window.location.hostname}:8002`
 
 const EmergencyAccess = () => {
   const [payload, setPayload] = useState("")
@@ -21,7 +20,7 @@ const EmergencyAccess = () => {
   const detectorRef = useRef(null)
   const canvasRef = useRef(null)
 
-  const resolveUrl = (url) => url?.startsWith("http") ? url : `${API_BASE}${url}`
+  const resolveUrl = (url) => url?.startsWith("http") ? url : `${API_ORIGIN}${url}`
 
   useEffect(() => {
     const supported = typeof window !== "undefined" && "BarcodeDetector" in window

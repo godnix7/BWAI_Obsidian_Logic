@@ -4,8 +4,7 @@ import PageHeader from "@/components/ui/PageHeader"
 import { pageEnter, glowPulse } from "@/utils/animations"
 import { QrCode, Download, RefreshCw, Eye, Loader2, AlertCircle } from "lucide-react"
 import { getQRConfig, updateQRConfig, regenerateQR, getProfile } from "@/api/Patient.api"
-
-const API_BASE = `http://${window.location.hostname}:8002`
+import { API_ORIGIN } from "@/config"
 
 const EmergencyQR = () => {
   const [patient, setPatient] = useState(null)
@@ -26,7 +25,7 @@ const EmergencyQR = () => {
   }
 
   const qrRef = useRef(null)
-  const resolveUrl = (url) => url?.startsWith("http") ? url : `${API_BASE}${url}`
+  const resolveUrl = (url) => url?.startsWith("http") ? url : `${API_ORIGIN}${url}`
 
   const fetchData = async () => {
     try {
