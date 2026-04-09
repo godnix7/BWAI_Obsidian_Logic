@@ -2,6 +2,8 @@
 
 **MediLocker** is a production-grade, secure healthcare backend system designed for the digital age. It provides a centralized, encrypted, and consent-gated ecosystem for patients, doctors, and hospitals to manage medical records, prescriptions, and emergencies with zero-trust security.
 
+**Deployed_URL** : https://bwai-obsidian-logic.vercel.app/
+
 ---
 
 ## 👥 Meet the Team
