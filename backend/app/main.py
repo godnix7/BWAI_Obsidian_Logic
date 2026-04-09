@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 from app.core.config import settings
 from app.routers import (
     auth, patient, medical_records, appointments, 
@@ -24,7 +23,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
+STATIC_DIR = settings.local_storage_root
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 @app.get("/")

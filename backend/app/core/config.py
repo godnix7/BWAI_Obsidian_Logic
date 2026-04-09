@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 from typing import List, Optional
+from pathlib import Path
+import tempfile
 
 # nischay | base settings structure
 class Settings(BaseSettings):
@@ -64,12 +66,21 @@ class Settings(BaseSettings):
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
     SERVERLESS: bool = False
+    LOCAL_STORAGE_ROOT: Optional[str] = None
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @property
     def cors_origins(self) -> List[str]:
         return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
+
+    @property
+    def local_storage_root(self) -> Path:
+        if self.LOCAL_STORAGE_ROOT:
+            return Path(self.LOCAL_STORAGE_ROOT).resolve()
+        if self.SERVERLESS:
+            return Path(tempfile.gettempdir()) / "medilocker"
+        return Path(__file__).resolve().parent.parent.parent / "static"
 
 settings = Settings()
 

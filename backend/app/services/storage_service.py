@@ -44,7 +44,15 @@ class StorageService:
         return self._client
 
     def _local_path(self, key: str) -> str:
-        return key.replace("/", os.sep)
+        normalized_key = key.replace("/", os.sep)
+        static_prefix = f"static{os.sep}"
+        if normalized_key == "static":
+            relative_path = ""
+        elif normalized_key.startswith(static_prefix):
+            relative_path = normalized_key[len(static_prefix):]
+        else:
+            relative_path = normalized_key
+        return str((settings.local_storage_root / relative_path).resolve())
 
     def _local_url(self, key: str) -> str:
         return "/" + key.replace(os.sep, "/")
