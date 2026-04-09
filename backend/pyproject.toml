@@ -3,7 +3,7 @@ name = "backend"
 version = "0.1.0"
 description = "MediLocker Role-Based Healthcare Dashboard Backend"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.12"
 dependencies = [
     "alembic>=1.13.1",
     "asyncpg>=0.29.0",
