@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 import tempfile
 from typing import List, Optional
 
@@ -11,7 +12,12 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
-    DATABASE_URL: str = "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/medilocker"
+    DATABASE_URL: str = (
+        os.getenv("DATABASE_URL")
+        or os.getenv("POSTGRES_URL")
+        or os.getenv("POSTGRES_PRISMA_URL")
+        or "postgresql+psycopg://postgres:postgres@127.0.0.1:5432/medilocker"
+    )
     REDIS_URL: Optional[str] = None
 
     @field_validator("DATABASE_URL", mode="before")
