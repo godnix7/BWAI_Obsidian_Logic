@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import tempfile
 from typing import List, Optional
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -24,12 +25,19 @@ class Settings(BaseSettings):
     @classmethod
     def fix_database_url(cls, value: str) -> str:
         if value.startswith("postgres://"):
-            return value.replace("postgres://", "postgresql+psycopg://", 1)
-        if value.startswith("postgresql://"):
-            return value.replace("postgresql://", "postgresql+psycopg://", 1)
-        if value.startswith("postgresql+psycopg2://"):
-            return value.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
-        return value
+            value = value.replace("postgres://", "postgresql+psycopg://", 1)
+        elif value.startswith("postgresql://"):
+            value = value.replace("postgresql://", "postgresql+psycopg://", 1)
+        elif value.startswith("postgresql+psycopg2://"):
+            value = value.replace("postgresql+psycopg2://", "postgresql+psycopg://", 1)
+
+        parts = urlsplit(value)
+        filtered_query = [
+            (key, query_value)
+            for key, query_value in parse_qsl(parts.query, keep_blank_values=True)
+            if key.lower() in {"sslmode", "application_name", "connect_timeout"}
+        ]
+        return urlunsplit(parts._replace(query=urlencode(filtered_query)))
 
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 7
