@@ -5,7 +5,11 @@ from app.core.config import settings
 import redis.asyncio as redis
 
 # Create a redis client for rate limiting
-redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+redis_client = (
+    redis.from_url(settings.REDIS_URL, decode_responses=True)
+    if settings.REDIS_URL
+    else None
+)
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
@@ -28,13 +32,14 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         final_key = f"{key}:{current_minute}"
         
         try:
-            count = await redis_client.incr(final_key)
-            if count == 1:
-                await redis_client.expire(final_key, 60)
+            if redis_client:
+                count = await redis_client.incr(final_key)
+                if count == 1:
+                    await redis_client.expire(final_key, 60)
             
-            # Limit: 200 requests per minute
-            if count > 200:
-                raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+                # Limit: 200 requests per minute
+                if count > 200:
+                    raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
         except Exception:
             # Fallback if redis is down: allow request but log warning
             pass

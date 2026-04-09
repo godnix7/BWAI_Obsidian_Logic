@@ -22,7 +22,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 KEYS_DIR = BASE_DIR / "keys"
 
 # Redis client for token blacklisting
-redis_client = redis.from_url(settings.REDIS_URL, decode_responses=True)
+redis_client = (
+    redis.from_url(settings.REDIS_URL, decode_responses=True)
+    if settings.REDIS_URL
+    else None
+)
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -31,6 +35,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login
 
 # Load RS256 Keys with robust paths
 def get_private_key():
+    if settings.JWT_PRIVATE_KEY:
+        return settings.JWT_PRIVATE_KEY.replace("\\n", "\n")
     key_path = KEYS_DIR / "private.pem"
     if not key_path.exists():
         raise FileNotFoundError(f"Private key not found at {key_path}")
@@ -38,6 +44,8 @@ def get_private_key():
         return f.read()
 
 def get_public_key():
+    if settings.JWT_PUBLIC_KEY:
+        return settings.JWT_PUBLIC_KEY.replace("\\n", "\n")
     key_path = KEYS_DIR / "public.pem"
     if not key_path.exists():
         raise FileNotFoundError(f"Public key not found at {key_path}")

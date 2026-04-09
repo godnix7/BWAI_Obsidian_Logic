@@ -1,15 +1,19 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.pool import NullPool
 from app.core.config import settings
 from app.db.base_class import Base
 
-# antigravity | unified async engine configuration
-# Create async SQLAlchemy engine
-engine = create_async_engine(
-    settings.DATABASE_URL, 
-    echo=True, # Set to False in production
-    future=True
-)
+engine_kwargs = {
+    "echo": False,
+    "future": True,
+    "pool_pre_ping": True,
+}
+
+# Serverless functions should avoid long-lived pooled DB connections.
+if settings.SERVERLESS:
+    engine_kwargs["poolclass"] = NullPool
+
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # antigravity | unified session maker
 # Async session maker

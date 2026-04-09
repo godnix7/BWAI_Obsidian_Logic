@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     
     # antigravity | unified db urls
     DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@127.0.0.1:5432/medilocker"
-    REDIS_URL: str = "redis://127.0.0.1:6379/0"
+    REDIS_URL: Optional[str] = None
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     JWT_PRIVATE_KEY_PATH: str = "./keys/private.pem"
     JWT_PUBLIC_KEY_PATH: str = "./keys/public.pem"
     SECRET_KEY: str = "super-secret-web-key"
+    JWT_PRIVATE_KEY: Optional[str] = None
+    JWT_PUBLIC_KEY: Optional[str] = None
 
     # Patient / QR settings 
     QR_ENCRYPTION_KEY: str = "your-aes-key-32-chars-long-placeholder!!!"
@@ -61,6 +63,7 @@ class Settings(BaseSettings):
 
     # CORS
     ALLOWED_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
+    SERVERLESS: bool = False
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
