@@ -42,7 +42,7 @@ const menus = {
     { name: "Profile", path: "/hospital/profile", icon: "Building2" },
   ]
 }
-}
+
 
 const Sidebar = ({ role, collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const location = useLocation()

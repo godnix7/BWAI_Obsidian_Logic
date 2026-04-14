@@ -391,6 +391,31 @@ export default function MediLockerPage() {
             boxShadow: "var(--shadow-glow)",
           }}
         >
+          <div
+            style={{
+              maxWidth: 1280,
+              margin: "0 auto",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: window.innerWidth > 768 ? "14px 32px" : "12px 24px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <h1
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: window.innerWidth > 768 ? 26 : 22,
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  color: "var(--eggplant)",
+                  margin: 0,
+                }}
+              >
+                MediLocker
+              </h1>
+            </div>
+
             <div className="hidden-desktop">
               <button 
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
