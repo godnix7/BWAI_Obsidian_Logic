@@ -42,110 +42,155 @@ const menus = {
     { name: "Profile", path: "/hospital/profile", icon: "Building2" },
   ]
 }
+}
 
-const Sidebar = ({ role, collapsed, setCollapsed }) => {
+const Sidebar = ({ role, collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
   const location = useLocation()
   const { logout } = useAuthStore()
   const items = menus[role] || []
 
+  const isMobile = window.innerWidth <= 768;
+
   return (
-    <aside style={{
-      width: collapsed ? "var(--collapsed-width)" : "var(--sidebar-width)",
-      height: "100vh", position: "sticky", top: 0,
-      background: "var(--glass-medium)", backdropFilter: "blur(24px)",
-      borderRight: "1px solid var(--border-default)", padding: "24px 12px",
-      display: "flex", flexDirection: "column", flexShrink: 0,
-      transition: "width 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      overflowX: "hidden"
-    }}>
-      <div style={{ 
-        display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", 
-        marginBottom: 32, padding: "0 8px" 
+    <>
+      {/* Mobile Backdrop */}
+      {mobileOpen && (
+        <div 
+          onClick={() => setMobileOpen(false)}
+          style={{
+            position: "fixed", inset: 0, background: "rgba(10, 17, 40, 0.4)",
+            backdropFilter: "blur(4px)", zIndex: 999, animation: "fadeIn 0.3s ease"
+          }}
+        />
+      )}
+
+      <aside style={{
+        width: collapsed ? "var(--collapsed-width)" : "var(--sidebar-width)",
+        height: "100vh", 
+        position: isMobile ? "fixed" : "sticky", 
+        top: 0,
+        left: isMobile ? (mobileOpen ? 0 : "-100%") : 0,
+        zIndex: isMobile ? 1000 : 10,
+        background: "var(--glass-medium)", 
+        backdropFilter: isMobile ? "none" : "blur(24px)",
+        backgroundBlur: isMobile ? "none" : "blur(24px)",
+        borderRight: "1px solid var(--border-default)", 
+        padding: "24px 12px",
+        display: "flex", 
+        flexDirection: "column", 
+        flexShrink: 0,
+        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+        overflowX: "hidden",
+        boxShadow: isMobile && mobileOpen ? "20px 0 50px rgba(0,0,0,0.1)" : "none"
       }}>
         <div style={{ 
-          opacity: collapsed ? 0 : 1, 
-          width: collapsed ? 0 : "auto",
-          transition: "all 0.3s ease",
-          overflow: "hidden",
-          whiteSpace: "nowrap"
+          display: "flex", alignItems: "center", justifyContent: (collapsed && !isMobile) ? "center" : "space-between", 
+          marginBottom: 32, padding: "0 8px" 
         }}>
-          <Link to="/" style={{ textDecoration: "none" }}>
-            <h2 style={{
-              fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700,
-              letterSpacing: "0.02em", color: "var(--eggplant)", margin: 0
-            }}>
-              MediLocker
-            </h2>
-          </Link>
-        </div>
-        <button 
-          onClick={() => setCollapsed(!collapsed)}
-          style={{
-            background: "rgba(10, 17, 40, 0.05)", border: "1px solid var(--border-subtle)",
-            borderRadius: "12px", padding: "8px", cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            transition: "all 0.2s ease", color: "var(--text-primary)",
-            flexShrink: 0
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "var(--glass-light)"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "rgba(10, 17, 40, 0.05)"}
-        >
-          {collapsed ? <Menu size={22} /> : <Menu size={22} />}
-        </button>
-      </div>
-
-      <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-        {items.map((item) => {
-          const Icon = iconMap[item.icon]
-          const isActive = location.pathname === item.path
-          return (
-            <Link key={item.path} to={item.path} style={{ textDecoration: "none" }}>
-              <div style={{
-                display: "flex", alignItems: "center", gap: 12,
-                padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 500,
-                color: isActive ? "var(--accent)" : "var(--text-secondary)",
-                background: isActive ? "var(--accent-soft)" : "transparent",
-                borderLeft: !collapsed && isActive ? "4px solid var(--accent)" : "4px solid transparent",
-                transition: "all 0.2s ease",
-                justifyContent: collapsed ? "center" : "flex-start",
-                width: "100%"
-              }}
-                onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "var(--glass-light)"; e.currentTarget.style.color = "var(--text-primary)" }}}
-                onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)" }}}
-              >
-                {Icon && <Icon size={20} style={{ flexShrink: 0 }} />}
-                {!collapsed && (
-                  <span style={{ 
-                    whiteSpace: "nowrap", 
-                    opacity: collapsed ? 0 : 1,
-                    transition: "opacity 0.2s ease"
-                  }}>
-                    {item.name}
-                  </span>
-                )}
-              </div>
+          <div style={{ 
+            opacity: (collapsed && !isMobile) ? 0 : 1, 
+            width: (collapsed && !isMobile) ? 0 : "auto",
+            transition: "all 0.3s ease",
+            overflow: "hidden",
+            whiteSpace: "nowrap"
+          }}>
+            <Link to="/" style={{ textDecoration: "none" }}>
+              <h2 style={{
+                fontFamily: "var(--font-display)", fontSize: 24, fontWeight: 700,
+                letterSpacing: "0.02em", color: "var(--eggplant)", margin: 0
+              }}>
+                MediLocker
+              </h2>
             </Link>
-          )
-        })}
-      </nav>
+          </div>
+          
+          {isMobile ? (
+            <button 
+              onClick={() => setMobileOpen(false)}
+              style={{
+                background: "rgba(10, 17, 40, 0.05)", border: "none",
+                borderRadius: "12px", padding: "8px", cursor: "pointer",
+                color: "var(--text-primary)"
+              }}
+            >
+              <X size={22} />
+            </button>
+          ) : (
+            <button 
+              onClick={() => setCollapsed(!collapsed)}
+              style={{
+                background: "rgba(10, 17, 40, 0.05)", border: "1px solid var(--border-subtle)",
+                borderRadius: "12px", padding: "8px", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                transition: "all 0.2s ease", color: "var(--text-primary)",
+                flexShrink: 0
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--glass-light)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = "rgba(10, 17, 40, 0.05)"}
+            >
+              <Menu size={22} />
+            </button>
+          )}
+        </div>
 
-      <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 16 }}>
-        <button onClick={() => { logout(); window.location.href = "/login" }} style={{
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 600,
-          color: "var(--text-secondary)", background: "transparent", border: "none",
-          cursor: "pointer", width: "100%", fontFamily: "var(--font-body)",
-          transition: "all 0.2s",
-          justifyContent: collapsed ? "center" : "flex-start"
-        }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--error)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)" }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "transparent" }}
-        >
-          <LogOut size={20} style={{ flexShrink: 0 }} />
-          {!collapsed && <span style={{ whiteSpace: "nowrap" }}>Logout</span>}
-        </button>
-      </div>
-    </aside>
+        <nav style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+          {items.map((item) => {
+            const Icon = iconMap[item.icon]
+            const isActive = location.pathname === item.path
+            return (
+              <Link 
+                key={item.path} 
+                to={item.path} 
+                style={{ textDecoration: "none" }}
+                onClick={() => { if(isMobile) setMobileOpen(false) }}
+              >
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 500,
+                  color: isActive ? "var(--accent)" : "var(--text-secondary)",
+                  background: isActive ? "var(--accent-soft)" : "transparent",
+                  borderLeft: (!collapsed || isMobile) && isActive ? "4px solid var(--accent)" : "4px solid transparent",
+                  transition: "all 0.2s ease",
+                  justifyContent: (collapsed && !isMobile) ? "center" : "flex-start",
+                  width: "100%"
+                }}
+                  onMouseEnter={(e) => { if (!isActive) { e.currentTarget.style.background = "var(--glass-light)"; e.currentTarget.style.color = "var(--text-primary)" }}}
+                  onMouseLeave={(e) => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-secondary)" }}}
+                >
+                  {Icon && <Icon size={20} style={{ flexShrink: 0 }} />}
+                  {(!collapsed || isMobile) && (
+                    <span style={{ 
+                      whiteSpace: "nowrap", 
+                      opacity: (collapsed && !isMobile) ? 0 : 1,
+                      transition: "opacity 0.2s ease"
+                    }}>
+                      {item.name}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            )
+          })}
+        </nav>
+
+        <div style={{ borderTop: "1px solid var(--border-subtle)", paddingTop: 16 }}>
+          <button onClick={() => { logout(); window.location.href = "/login" }} style={{
+            display: "flex", alignItems: "center", gap: 12,
+            padding: "12px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+            color: "var(--text-secondary)", background: "transparent", border: "none",
+            cursor: "pointer", width: "100%", fontFamily: "var(--font-body)",
+            transition: "all 0.2s",
+            justifyContent: (collapsed && !isMobile) ? "center" : "flex-start"
+          }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--error)"; e.currentTarget.style.background = "rgba(239,68,68,0.08)" }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-secondary)"; e.currentTarget.style.background = "transparent" }}
+          >
+            <LogOut size={20} style={{ flexShrink: 0 }} />
+            {(!collapsed || isMobile) && <span style={{ whiteSpace: "nowrap" }}>Logout</span>}
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }
 

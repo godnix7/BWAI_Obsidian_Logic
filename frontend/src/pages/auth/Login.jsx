@@ -42,7 +42,7 @@ const Login = () => {
       `,
       padding: 24
     }}>
-      <div className="glass-card" style={{ width: 420, padding: 40, background: "rgba(255, 255, 255, 0.6)" }}>
+      <div className="glass-card" style={{ width: "100%", maxWidth: 420, padding: 40, background: "rgba(255, 255, 255, 0.6)" }}>
         <h1 className="gradient-text" style={{
           fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700,
           textAlign: "center", marginBottom: 8

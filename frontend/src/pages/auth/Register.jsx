@@ -78,7 +78,7 @@ const Register = () => {
       `,
       padding: 24
     }}>
-      <div className="glass-card" style={{ width: 480, padding: 40, background: "rgba(255, 255, 255, 0.6)" }}>
+      <div className="glass-card" style={{ width: "100%", maxWidth: 480, padding: 40, background: "rgba(255, 255, 255, 0.6)" }}>
         <h1 className="gradient-text" style={{
           fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 700,
           textAlign: "center", marginBottom: 8
@@ -104,7 +104,7 @@ const Register = () => {
           </div>
         ) : (
           <form onSubmit={handleRegister}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: window.innerWidth > 480 ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 12 }}>
               <div><label className="input-label">Full Name</label>
                 <input className="input" placeholder="John Doe" value={form.full_name} onChange={e => update("full_name", e.target.value)} required /></div>
               <div><label className="input-label">Phone</label>
@@ -116,7 +116,7 @@ const Register = () => {
               <input className="input" type="email" placeholder="you@example.com" value={form.email} onChange={e => update("email", e.target.value)} required />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: window.innerWidth > 480 ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 12 }}>
               <div><label className="input-label">Password</label>
                 <input className="input" type="password" placeholder="Min 8 chars" value={form.password} onChange={e => update("password", e.target.value)} required /></div>
               <div><label className="input-label">Confirm Password</label>
@@ -124,7 +124,7 @@ const Register = () => {
             </div>
 
             {role === "doctor" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: window.innerWidth > 480 ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 12 }}>
                 <div><label className="input-label">License Number</label>
                   <input className="input" placeholder="MH-12345" value={extra.license_number} onChange={e => updateExtra("license_number", e.target.value)} required /></div>
                 <div><label className="input-label">Specialization</label>
@@ -133,7 +133,7 @@ const Register = () => {
             )}
 
             {role === "hospital" && (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: window.innerWidth > 480 ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 12 }}>
                 <div><label className="input-label">Hospital Name</label>
                   <input className="input" placeholder="Apollo Hospital" value={extra.hospital_name} onChange={e => updateExtra("hospital_name", e.target.value)} required /></div>
                 <div><label className="input-label">Registration No.</label>

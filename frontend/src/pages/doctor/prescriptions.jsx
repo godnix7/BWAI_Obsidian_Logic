@@ -159,7 +159,7 @@ const Prescriptions = () => {
       {createOpen && (
         <Modal title="Create Prescription" onClose={() => setCreateOpen(false)} wide>
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ display: "grid", gridTemplateColumns: window.innerWidth > 640 ? "1fr 1fr" : "1fr", gap: 12 }}>
               <div>
                 <label className="input-label">Patient (Approved Appointments)</label>
                 <select className="input" value={form.patient_id} onChange={(e) => {
@@ -194,7 +194,7 @@ const Prescriptions = () => {
                     <span style={{ fontSize: 12, fontWeight: 600, color: "var(--text-muted)" }}>Medication #{index + 1}</span>
                     {meds.length > 1 && <button className="btn-ghost" style={{ padding: 4, color: "var(--error)" }} onClick={() => removeMed(index)}><Trash2 size={14} /></button>}
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: window.innerWidth > 768 ? "2fr 1fr 1fr 1fr" : "1fr", gap: 8 }}>
                     <input className="input" placeholder="Medication Name" value={med.medication_name} onChange={(e) => updateMed(index, "medication_name", e.target.value)} />
                     <input className="input" placeholder="Dosage" value={med.dosage} onChange={(e) => updateMed(index, "dosage", e.target.value)} />
                     <input className="input" placeholder="Frequency" value={med.frequency} onChange={(e) => updateMed(index, "frequency", e.target.value)} />

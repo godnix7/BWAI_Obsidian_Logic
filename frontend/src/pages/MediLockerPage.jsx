@@ -10,6 +10,8 @@ const {
   PointLight, ACESFilmicToneMapping 
 } = THREE;
 
+import { TestTube, CreditCard, LogOut, Menu, X } from "lucide-react";
+
 gsap.registerPlugin(ScrollTrigger);
 
 export default function MediLockerPage() {
@@ -19,6 +21,7 @@ export default function MediLockerPage() {
   const threeRef = useRef(null);
   const cursorRef = useRef(null);
   const heroImgRef = useRef(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     /* ── SMOOTH SCROLL (Lenis) ─────────────────────────── */
@@ -38,9 +41,9 @@ export default function MediLockerPage() {
     };
     requestAnimationFrame(rafLoop);
 
-    /* ── CURSOR GLOW ───────────────────────────────────── */
+    /* ── CURSOR GLOW (Desktop Only) ────────────────────── */
     const handleMouseMove = (e) => {
-      if (cursorRef.current) {
+      if (cursorRef.current && window.matchMedia("(hover: hover)").matches) {
         gsap.to(cursorRef.current, {
           x: e.clientX - 100,
           y: e.clientY - 100,
@@ -48,7 +51,9 @@ export default function MediLockerPage() {
         });
       }
     };
-    window.addEventListener("mousemove", handleMouseMove);
+    if (window.matchMedia("(hover: hover)").matches) {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
 
     /* ── HERO REVEAL ───────────────────────────────────── */
     const heroTl = gsap.timeline({ delay: 0.2 });
@@ -90,8 +95,9 @@ export default function MediLockerPage() {
 
     /* ── SCROLL LINE ANIMATION (Restored) ──────────────── */
     const lineCanvas = document.createElement('canvas');
-    const lineRenderer = new WebGLRenderer({ canvas: lineCanvas, alpha: true, antialias: true });
-    lineRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const lineRenderer = new WebGLRenderer({ canvas: lineCanvas, alpha: true, antialias: window.innerWidth > 768 });
+    const isMobile = window.innerWidth <= 768;
+    lineRenderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
     
     const lineScene = new Scene();
     const lineGroup = new Group();
@@ -245,8 +251,8 @@ export default function MediLockerPage() {
       1000
     );
 
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: window.innerWidth > 768 });
+    renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
@@ -378,40 +384,23 @@ export default function MediLockerPage() {
             left: 0,
             right: 0,
             zIndex: 100,
-            backdropFilter: "blur(24px)",
-            WebkitBackdropFilter: "blur(24px)",
+            backdropFilter: window.innerWidth > 768 ? "blur(20px)" : "none",
+            WebkitBackdropFilter: window.innerWidth > 768 ? "blur(20px)" : "none",
             background: "rgba(239, 250, 253, 0.70)",
             borderBottom: "1px solid var(--border-default)",
             boxShadow: "var(--shadow-glow)",
           }}
         >
-          <div
-            style={{
-              maxWidth: 1280,
-              margin: "0 auto",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              padding: "14px 32px",
-            }}
-          >
-            <h1
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 700,
-                fontSize: 26,
-                letterSpacing: "0.02em",
-                background: "var(--gradient-accent)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-                margin: 0,
-              }}
-            >
-              MediLocker
-            </h1>
+            <div className="hidden-desktop">
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                style={{ background: "none", border: "none", color: "var(--accent)", cursor: "pointer" }}
+              >
+                {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              </button>
+            </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
+            <div className="hidden-mobile" style={{ display: "flex", alignItems: "center", gap: 28 }}>
               {[
                 { label: "HOME", href: "#home" },
                 { label: "ABOUT US", href: "#about" },
@@ -442,6 +431,36 @@ export default function MediLockerPage() {
               <button className="btn-primary" onClick={() => navigate("/register")}>Register</button>
             </div>
           </div>
+
+          {/* Mobile Menu Overlay */}
+          {mobileMenuOpen && (
+            <div 
+              style={{ 
+                position: "fixed", top: 60, left: 0, right: 0, bottom: 0, 
+                background: "var(--bg-base)", zIndex: 99, 
+                display: "flex", flexDirection: "column", padding: 32, gap: 24,
+                animation: "fadeIn 0.3s ease"
+              }}
+            >
+              {[
+                { label: "HOME", href: "#home" },
+                { label: "ABOUT US", href: "#about" },
+                { label: "SERVICES", href: "#services" },
+              ].map((item) => (
+                <a 
+                  key={item.label} 
+                  href={item.href} 
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{ fontSize: 24, fontWeight: 700, color: "var(--text-primary)", textDecoration: "none" }}
+                >
+                  {item.label}
+                </a>
+              ))}
+              <hr style={{ border: "none", borderTop: "1px solid var(--border-subtle)" }} />
+              <button className="btn-primary" onClick={() => navigate("/register")}>Register Now</button>
+              <button className="btn-secondary" onClick={() => navigate("/login")}>Sign In</button>
+            </div>
+          )}
         </nav>
 
         {/* ── HERO ───────────────────────────────────── */}
@@ -450,20 +469,22 @@ export default function MediLockerPage() {
           style={{
             minHeight: "100vh",
             display: "flex",
+            flexDirection: window.innerWidth > 1024 ? "row" : "column",
             alignItems: "center",
             justifyContent: "space-between",
-            padding: "140px 48px 120px",
+            padding: window.innerWidth > 768 ? "140px 48px 120px" : "100px 24px 60px",
             maxWidth: 1280,
             margin: "0 auto",
-            gap: 48,
+            gap: window.innerWidth > 1024 ? 48 : 40,
+            textAlign: window.innerWidth > 1024 ? "left" : "center"
           }}
         >
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, width: "100%" }}>
             <div className="hero-title-wrap">
               <h2
                 style={{
                   fontFamily: "var(--font-display)",
-                  fontSize: 84,
+                  fontSize: window.innerWidth > 768 ? 84 : 48,
                   fontWeight: 700,
                   letterSpacing: "-0.01em",
                   lineHeight: 1.1,
@@ -482,10 +503,11 @@ export default function MediLockerPage() {
               className="hero-para"
               style={{
                 color: "var(--text-secondary)",
-                fontSize: 17,
+                fontSize: window.innerWidth > 768 ? 17 : 15,
                 lineHeight: 1.75,
                 marginTop: 20,
                 maxWidth: 520,
+                margin: window.innerWidth > 1024 ? "20px 0 0" : "20px auto 0"
               }}
             >
               A secure, intelligent digital health vault — empowering patients,
@@ -495,7 +517,15 @@ export default function MediLockerPage() {
 
             <div
               className="hero-cta"
-              style={{ display: "flex", gap: 16, marginTop: 36, position: "relative", zIndex: 110 }}
+              style={{ 
+                display: "flex", 
+                flexDirection: window.innerWidth > 480 ? "row" : "column",
+                gap: 16, 
+                marginTop: 36, 
+                position: "relative", 
+                zIndex: 110,
+                justifyContent: window.innerWidth > 1024 ? "flex-start" : "center"
+              }}
             >
               <button className="btn-primary" style={{ fontSize: 16, pointerEvents: "auto" }} onClick={() => navigate("/register")}>
                 Get Started →
@@ -511,17 +541,16 @@ export default function MediLockerPage() {
             ref={heroImgRef}
             className="hero-img"
             style={{
-              width: 380,
-              height: 380,
+              width: window.innerWidth > 768 ? 380 : 300,
+              height: window.innerWidth > 768 ? 380 : 300,
               borderRadius: 24,
               flexShrink: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               background: "var(--glass-light)",
-              backdropFilter: "blur(16px)",
-              WebkitBackdropFilter: "blur(16px)",
-              border: "1px solid var(--glass-border-accent)",
+              backdropFilter: window.innerWidth > 768 ? "blur(16px)" : "none",
+              border: "1px solid var(--border-default)",
               boxShadow: "var(--shadow-card)",
               position: "relative",
               overflow: "hidden",
@@ -698,7 +727,7 @@ export default function MediLockerPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
+              gridTemplateColumns: window.innerWidth > 992 ? "repeat(3, 1fr)" : "1fr",
               gap: 32,
               position: "relative",
             }}
